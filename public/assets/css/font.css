@@ -1,0 +1,31 @@
+@font-face {
+    font-family: 'Noto Serif Thai';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/NotoSerifThai-500.woff2') format('woff2');
+    }
+    /* Noto Serif Thai Bold 700 */
+    @font-face {
+    font-family: 'Noto Serif Thai';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/NotoSerifThai-700.woff2') format('woff2');
+    }
+    /* Noto Serif Latin Regular 500 */
+    @font-face {
+    font-family: 'Noto Serif';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/NotoSerif-500.woff2') format('woff2');
+    }
+    /* Noto Serif Latin Bold 700 */
+    @font-face {
+    font-family: 'Noto Serif';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/NotoSerif-700.woff2') format('woff2');
+}

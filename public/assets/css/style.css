@@ -1,0 +1,415 @@
+/*
+ * Central Stylesheet for Novel Noob Project
+ * Version: 1.0
+ * Description: Contains shared styles for colors, fonts, layout, buttons, navigation, forms, and modals.
+*/
+
+/* === 1. Root Variables & Basic Setup === */
+:root {
+    --bg-dark: #121828;
+    --bg-light: #1B233F;
+    --bg-nav: #161d31;
+    --primary-accent: #6C5DD3;
+    --primary-hover: #8375e7;
+    --secondary-accent: #3A3D68;
+    --secondary-hover: #525692;
+    --text-primary: #F0F2F5;
+    --text-secondary: #A9B4D9;
+    --border-color: #2a335e;
+    --status-completed: #34D399;
+    --warning-color: #facc15;
+    --danger-color: #f87171;
+    --status-ready: #FBBF24;
+    --status-active: #34D399;
+    --status-pending: #facc15;
+    --status-banned: #f87171;
+    --font-ui: 'Noto Serif Thai', 'Noto Serif', sans-serif;
+    --font-heading: 'Noto Serif', 'Noto Serif Thai', serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-ui);
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* === 2. Reusable Components === */
+
+/* --- Buttons --- */
+.btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-accent);
+    color: white;
+    border: 2px solid var(--primary-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 93, 211, 0.4);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--secondary-accent);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--secondary-hover);
+    color: var(--text-primary);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+    border: 2px solid var(--danger-color);
+}
+.btn-danger:hover {
+     background-color: #ef4444;
+     border-color: #ef4444;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* --- Forms --- */
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 15px;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 10px rgba(108, 93, 211, 0.3);
+}
+
+/* --- Cards --- */
+.card {
+    background-color: var(--bg-light);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.card-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+}
+
+
+/* --- Modals --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(18, 24, 40, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-overlay.visible, .modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: var(--bg-light);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transform: scale(0.95);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.visible .modal-content, .modal-overlay.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2, .modal-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+}
+.modal-content p {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    line-height: 1.7;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-footer, .modal-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+
+/* === 3. Layout Components === */
+
+/* --- Main Navigation (Public Pages) --- */
+header.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1001;
+    background-color: var(--bg-dark);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+nav.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.logo {
+    font-family: var(--font-heading) !important;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.nav-links a {
+    margin: 0 15px;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--text-primary);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-actions .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+/* --- Mobile Navigation --- */
+.mobile-nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1002;
+    width: 30px;
+    height: 24px;
+    position: relative;
+    transform: rotate(0deg);
+    transition: .5s ease-in-out;
+}
+
+.mobile-nav-toggle span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: var(--text-primary);
+    border-radius: 9px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+}
+
+.mobile-nav-toggle span:nth-child(1) { top: 0px; }
+.mobile-nav-toggle span:nth-child(2) { top: 10px; }
+.mobile-nav-toggle span:nth-child(3) { top: 20px; }
+
+.mobile-nav-toggle.open span:nth-child(1) {
+    top: 10px;
+    transform: rotate(135deg);
+}
+
+.mobile-nav-toggle.open span:nth-child(2) {
+    opacity: 0;
+    left: -30px;
+}
+
+.mobile-nav-toggle.open span:nth-child(3) {
+    top: 10px;
+    transform: rotate(-135deg);
+}
+
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.mobile-menu-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.mobile-nav-links a {
+    font-size: 1.8rem;
+    font-family: var(--font-heading);
+    color: var(--text-secondary);
+}
+
+.mobile-nav-links a.btn {
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    width: 200px;
+}
+
+/* --- Footer --- */
+.footer {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Responsive Breakpoint for Nav --- */
+@media (max-width: 900px) {
+    .nav-links,
+    .nav-actions {
+        display: none;
+    }
+    .mobile-nav-toggle {
+        display: block;
+    }
+}
