@@ -508,6 +508,7 @@
         <div class="container">
             <div class="community-feed">
 
+                <!-- Create Post Card -->
                 <div class="create-post-card">
                     <div class="create-post-avatar">
                         <img src="https://placehold.co/100x100/A9B4D9/121828?text=S" alt="Your Avatar">
@@ -515,10 +516,12 @@
                     <input type="text" class="create-post-input" id="create-post-input" placeholder="เขียนอะไรสักหน่อย...">
                 </div>
 
+                <!-- Post Feed Container -->
                 <div id="post-feed-container">
-                    <!-- Posts will be dynamically inserted here -->
+                    <!-- The first 10 posts are rendered here directly -->
                 </div>
 
+                <!-- Loader for infinite scroll -->
                 <div id="loader">
                     <p>กำลังโหลดโพสต์เพิ่มเติม...</p>
                 </div>
@@ -533,6 +536,7 @@
         </div>
     </footer>
     
+    <!-- Block Confirmation Modal -->
     <div id="block-confirmation-modal" class="modal-overlay">
         <div class="modal-content">
             <h3>ยืนยันการบล็อกผู้ใช้</h3>
@@ -544,14 +548,9 @@
         </div>
     </div>
 
-    <!-- Central Script -->
-    <script src="{{asset('assets/js/script.js')}}"></script>
-    
-    <!-- Page-specific script -->
+
     <script>
-        
         document.addEventListener('DOMContentLoaded', () => {
-            
             const postInput = document.getElementById('create-post-input');
             const postFeedContainer = document.getElementById('post-feed-container');
             const loader = document.getElementById('loader');
@@ -560,7 +559,7 @@
             const confirmBlockBtn = document.getElementById('confirm-block-btn');
             let commentToBlock = null;
 
-            // Mock Data Generation
+            // --- Mock Data Generation ---
              const mockLikerNames = ["คิตติกร จันทร์ลาออ", "มูนาวาร์ ฮุสเซน", "อาห์ติชาม อาลี", "นาซิม บิลลาห์", "คาบินายา มูธูลิงกัม", "สุรภี เวอร์มา", "อัญญญา อัญญมณี", "นาดีร์ เชาดรี", "ฮุย ดวง", "กฤต จิรรุ่งเรืองกิจ", "โอมิด กราฟฟิก", "ปัน ดีดีเอ", "คาร์โล คิมาโด", "อาลี ไบ", "อับดุล มุยซ์", "แองเจลีน เบลันโด", "โบนี่ สโนว์ดอน", "เจ สุภารัตน์", "วาเลอรี่ กอนซาเลซ"];
             const mockAuthors = [
                 { name: 'ม่านมุก', avatar: 'https://placehold.co/100x100/6C5DD3/FFFFFF?text=M' },
@@ -622,12 +621,22 @@
                 });
             }
 
+            // --- Infinite Scroll State ---
             let currentPostIndex = 0;
             const postsPerLoad = 10;
             let isLoading = false;
             let observedTarget = null;
 
             // --- Core Functions ---
+            function getReactionInfo(emoji) {
+                const reactions = {
+                    '👍': { text: 'ถูกใจ', color: 'var(--primary-accent)' }, '❤️': { text: 'รักเลย', color: '#ef4444' },
+                    '😂': { text: 'ฮา', color: '#facc15' }, '😮': { text: 'ว้าว', color: '#facc15' },
+                    '😢': { text: 'เศร้า', color: '#3b82f6' }, '😠': { text: 'โกรธ', color: '#f97316' }
+                };
+                return reactions[emoji] || { text: 'ถูกใจ', color: 'var(--text-secondary)' };
+            }
+
             function createCommentElement(commentData) {
                 const commentDiv = document.createElement('div');
                 commentDiv.className = 'comment';
@@ -698,7 +707,7 @@
                     <div class="post-stats">
                         <div class="reactions-summary-wrapper">
                              <div class="reactions-summary">
-                                <!-- Reaction icons will be prepended here -->
+                                <span class="reaction-icon"></span>
                                 <span class="total-likes"></span>
                             </div>
                             <div class="likers-tooltip stats-tooltip">
@@ -742,8 +751,8 @@
                     });
                 }
 
-                // Call the global update function
-                window.updatePostStats(postCard);
+                updatePostStats(postCard);
+                updateUsefulStats(postCard);
                 return postCard;
             }
             
@@ -765,6 +774,76 @@
                 }, 1000);
             }
 
+            // --- Stats and Actions Update Functions ---
+            function updatePostStats(postCard) {
+                 const statsContainer = postCard.querySelector('.post-stats');
+                 const totalLikesSpan = statsContainer.querySelector('.total-likes');
+                 const summaryContainer = statsContainer.querySelector('.reactions-summary');
+                 const tooltipUl = postCard.querySelector('.likers-tooltip ul');
+
+                 const reactions = postCard.dataset.reactions ? JSON.parse(postCard.dataset.reactions) : {};
+                 let totalLikes = Object.keys(reactions).length;
+                 let uniqueReactions = new Set(Object.values(reactions));
+                 
+                 totalLikesSpan.textContent = totalLikes > 0 ? totalLikes : '';
+                 
+                 summaryContainer.querySelectorAll('.reaction-icon').forEach(icon => icon.remove());
+                 uniqueReactions.forEach(emoji => {
+                     const iconSpan = document.createElement('span');
+                     iconSpan.className = 'reaction-icon';
+                     iconSpan.textContent = emoji;
+                     summaryContainer.prepend(iconSpan);
+                 });
+                 
+                 // Update tooltip
+                 tooltipUl.innerHTML = '';
+                 const likersToShow = mockLikerNames.slice(0, totalLikes);
+                 likersToShow.slice(0, 10).forEach(name => {
+                     const li = document.createElement('li');
+                     li.textContent = name;
+                     tooltipUl.appendChild(li);
+                 });
+
+                 if (totalLikes > 10) {
+                     const li = document.createElement('li');
+                     li.textContent = `และอีก ${totalLikes - 10} คน...`;
+                     tooltipUl.appendChild(li);
+                 }
+             }
+             
+            function updateUsefulStats(postCard) {
+                const usefulStats = postCard.querySelector('.useful-stats');
+                const usefulCountSpan = usefulStats.querySelector('.useful-count');
+                const tooltipUl = postCard.querySelector('.useful-tooltip ul');
+
+                const usefulUsers = postCard.dataset.usefulUsers ? JSON.parse(postCard.dataset.usefulUsers) : {};
+                const count = Object.keys(usefulUsers).length;
+                
+                if (count > 0) {
+                    usefulCountSpan.textContent = count;
+                    usefulStats.style.display = 'flex';
+                } else {
+                    usefulCountSpan.textContent = '';
+                    usefulStats.style.display = 'none';
+                }
+                
+                // Update tooltip for useful
+                 tooltipUl.innerHTML = '';
+                 const usefulUsersToShow = mockLikerNames.slice(0, count).reverse(); // Just to get different names
+                 usefulUsersToShow.slice(0, 10).forEach(name => {
+                     const li = document.createElement('li');
+                     li.textContent = `${name}`;
+                     tooltipUl.appendChild(li);
+                 });
+
+                 if (count > 10) {
+                     const li = document.createElement('li');
+                     li.textContent = `และอีก ${count - 10} คน...`;
+                     tooltipUl.appendChild(li);
+                 }
+            }
+
+            // --- Event Handlers ---
             function handleReaction(button, reactionEmoji) {
                 const postCard = button.closest('.post-card');
                 const reactionIconSpan = button.querySelector('.like-icon-reaction');
@@ -785,12 +864,12 @@
                     reactions[mockUserId] = reactionEmoji;
                     button.classList.add('liked');
                     reactionIconSpan.textContent = reactionEmoji;
-                    const reactionInfo = window.getReactionInfo(reactionEmoji);
+                    const reactionInfo = getReactionInfo(reactionEmoji);
                     actionTextSpan.textContent = 'ถูกใจ';
                     button.style.color = reactionInfo.color;
                 }
                 postCard.dataset.reactions = JSON.stringify(reactions);
-                window.updatePostStats(postCard);
+                updatePostStats(postCard);
             }
 
             postInput.addEventListener('keydown', (event) => {
@@ -813,6 +892,7 @@
                 }
             });
             
+            // Close dropdowns if clicked outside
             window.addEventListener('click', function(e) {
                 document.querySelectorAll('.options-dropdown.show').forEach(dropdown => {
                     if (!dropdown.parentElement.contains(e.target)) {
@@ -827,7 +907,7 @@
                     event.preventDefault();
                     const newCommentData = {
                         author: { 
-                            name: 'สมชาย ใจดี',
+                            name: 'สมชาย ใจดี', // Mock current user
                             avatar: 'https://placehold.co/100x100/A9B4D9/121828?text=S'
                         },
                         text: commentInput.value.trim()
@@ -844,25 +924,32 @@
                 const postCard = target.closest('.post-card');
                 if (!postCard) return;
 
+                // If a dropdown item is clicked, close its parent dropdown
                 const dropdownItem = target.closest('.options-dropdown-item');
                 if (dropdownItem) {
                     const dropdown = dropdownItem.closest('.options-dropdown');
-                    if (dropdown) dropdown.classList.remove('show');
+                    if (dropdown) {
+                        dropdown.classList.remove('show');
+                    }
                 }
 
+                // Handle options button click
                 const optionsBtn = target.closest('.options-btn');
                 if(optionsBtn){
                     const dropdown = optionsBtn.nextElementSibling;
+                    // Close other dropdowns first
                     document.querySelectorAll('.options-dropdown.show').forEach(d => {
                         if (d !== dropdown) d.classList.remove('show');
                     });
                     dropdown.classList.toggle('show');
-                    return;
+                    return; // Stop further processing
                 }
 
+                // Handle Delete Post Button
                 const deletePostBtn = target.closest('.item-title.delete');
                 if (deletePostBtn) {
                     postCard.remove();
+                    // Optional: Also remove the post from the allMockPosts array
                     const postId = parseInt(postCard.dataset.postId, 10);
                     allMockPosts = allMockPosts.filter(post => post.id !== postId);
                     return;
@@ -870,7 +957,10 @@
                 
                 const deleteCommentBtn = target.closest('.comment-delete-btn');
                 if (deleteCommentBtn) {
-                    deleteCommentBtn.closest('.comment')?.remove();
+                    const commentElement = deleteCommentBtn.closest('.comment');
+                    if (commentElement) {
+                        commentElement.remove();
+                    }
                     return;
                 }
                 
@@ -885,6 +975,7 @@
                 if(editPostBtn) {
                     const postBodyP = postCard.querySelector('.post-body p');
                     if (postBodyP.isContentEditable) return;
+
                     const originalText = postBodyP.textContent;
                     postBodyP.setAttribute('contenteditable', 'true');
                     postBodyP.focus();
@@ -901,8 +992,9 @@
                         postBodyP.removeEventListener('keydown', handleKeydown);
                         postBodyP.setAttribute('contenteditable', 'false');
                     };
+                    
                     const handleKeydown = (e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
+                        if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for new line
                             e.preventDefault();
                             finishEditing();
                         } else if (e.key === 'Escape') {
@@ -910,15 +1002,20 @@
                             finishEditing();
                         }
                     };
+                    
                     postBodyP.addEventListener('blur', finishEditing);
                     postBodyP.addEventListener('keydown', handleKeydown);
+                    
                     return;
                 }
 
                 const editCommentBtn = target.closest('.comment-edit-btn');
                 if (editCommentBtn) {
-                    const commentText = editCommentBtn.closest('.comment-content').querySelector('.comment-text');
+                    const commentContent = editCommentBtn.closest('.comment-content');
+                    const commentText = commentContent.querySelector('.comment-text');
+
                     if (commentText.isContentEditable) return;
+
                     const originalText = commentText.textContent;
                     commentText.setAttribute('contenteditable', 'true');
                     commentText.focus();
@@ -935,6 +1032,7 @@
                         commentText.removeEventListener('keydown', handleKeydown);
                         commentText.setAttribute('contenteditable', 'false');
                     };
+                    
                     const handleKeydown = (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
@@ -944,8 +1042,10 @@
                             finishEditing();
                         }
                     };
+                    
                     commentText.addEventListener('blur', finishEditing);
                     commentText.addEventListener('keydown', handleKeydown);
+
                     return;
                 }
 
@@ -974,10 +1074,11 @@
                         usefulBtn.classList.add('active');
                     }
                     postCard.dataset.usefulUsers = JSON.stringify(usefulUsers);
-                    window.updatePostStats(postCard);
+                    updateUsefulStats(postCard);
                 }
             });
 
+            // --- Modal Event Listeners ---
             function hideBlockModal() {
                 blockModal.classList.remove('show');
                 commentToBlock = null;
@@ -991,17 +1092,25 @@
                 hideBlockModal();
             });
             blockModal.addEventListener('click', (e) => {
-                if(e.target === blockModal) hideBlockModal();
+                if(e.target === blockModal) {
+                    hideBlockModal();
+                }
             });
 
+
+            // --- Initial Load & Intersection Observer Setup ---
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && !isLoading) {
                     loadMorePosts();
                 }
-            }, { rootMargin: '500px 0px' });
+            }, {
+                rootMargin: '500px 0px' 
+            });
 
             function updateObserverTarget() {
-                if (observedTarget) observer.unobserve(observedTarget);
+                if (observedTarget) {
+                    observer.unobserve(observedTarget);
+                }
                 if (currentPostIndex >= allMockPosts.length) {
                     observer.disconnect();
                     loader.style.display = 'none';
@@ -1016,12 +1125,15 @@
                 }
             }
 
+            // 1. Initial Render
             const initialPosts = allMockPosts.slice(0, postsPerLoad);
             initialPosts.forEach(postData => {
                 const postElement = createPostElement(postData);
                 postFeedContainer.appendChild(postElement);
             });
             currentPostIndex = postsPerLoad;
+
+            // 2. Setup initial observer target
             updateObserverTarget();
         });
     </script>
