@@ -454,7 +454,7 @@
                     <a href="#features">คุณสมบัติ</a>
                     <a href="#ebook">สร้างนิยาย</a>
                     <a href="#showcase">เสียงตอบรับ</a>
-                    <a href="articles.html">บทความ</a>
+                    <a href="{{route('articles.index')}}">บทความ</a>
                     <a href="{{route('community.index')}}">ชุมชน</a>
                 </div>
                 <div class="nav-actions">
@@ -476,7 +476,7 @@
             <a href="#features">คุณสมบัติ</a>
             <a href="#ebook">สร้างนิยาย</a>
             <a href="#showcase">เสียงตอบรับ</a>
-            <a href="articles.html">บทความ</a>
+            <a href="{{route('articles.index')}}">บทความ</a>
             <a href="{{route('community.index')}}">ชุมชน</a>
             <a href="{{route('login')}}" class="btn btn-secondary">เข้าสู่ระบบ</a>
             <a href="{{route('novel.create')}}" class="btn btn-primary">ฟรี 100 เครดิต</a>
