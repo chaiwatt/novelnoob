@@ -44,5 +44,5 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::post('/forex-price-alerts', [ForexPriceAlertController::class, 'index'])->name('forex-price-alert.index');
+Route::get('/forex-price-alerts', [ForexPriceAlertController::class, 'index'])->name('forex-price-alert.index');
 Route::post('/forex-price-alert/store', [ForexPriceAlertController::class, 'store'])->name('forex-price-alert.store');
