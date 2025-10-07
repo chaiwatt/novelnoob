@@ -17,7 +17,7 @@ class ForexPriceAlertController extends Controller
         return response()->json($alerts);
     }
 
-      public function store(Request $request)
+    public function store(Request $request)
     {
         // 1. ตรวจสอบความถูกต้องของข้อมูล (Validation)
         $validator = Validator::make($request->all(), [
@@ -41,5 +41,22 @@ class ForexPriceAlertController extends Controller
 
         // 3. ส่งข้อมูลที่สร้างเสร็จกลับไปพร้อม status 201 Created
         return response()->json($alert, 201);
+    }
+
+    public function destroy($id)
+    {
+        // 1. ค้นหา Alert ตาม ID
+        $alert = ForexPriceAlert::find($id);
+
+        // 2. ถ้าไม่เจอ ให้ส่ง response 404 Not Found
+        if (!$alert) {
+            return response()->json(['message' => 'Alert not found'], 404);
+        }
+
+        // 3. ถ้าเจอ ให้ทำการลบ
+        $alert->delete();
+
+        // 4. ส่ง response ว่างๆ กลับไปพร้อม status 204 No Content (หมายถึงสำเร็จแต่ไม่มีข้อมูลจะส่งกลับ)
+        return response()->json(null, 204);
     }
 }
