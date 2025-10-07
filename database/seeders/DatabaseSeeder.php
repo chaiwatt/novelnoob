@@ -19,5 +19,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+         // ✅ เพิ่มบรรทัดนี้เพื่อเรียกใช้ Seeder ของเรา
+        $this->call([
+            ForexPriceAlertSeeder::class,
+            // คุณสามารถเพิ่ม Seeder อื่นๆ ต่อที่นี่ได้
+        ]);
     }
 }
