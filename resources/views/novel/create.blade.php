@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>เขียนนิยายด้วย AI ง่ายๆ | จากไอเดียสู่ Ebook ขายได้จริง</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -351,7 +352,7 @@
         <div id="writing-dashboard" class="page">
             <header id="dashboard-header">
                 <div id="dashboard-header-content">
-                     <!-- h1 and p tags will be injected here -->
+                        <!-- h1 and p tags will be injected here -->
                 </div>
                 <button class="btn btn-secondary" id="dashboard-auto-write-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -407,9 +408,8 @@
         // --- Application State ---
         let appState = {
             currentPage: 'blueprint-creator',
-            novelBlueprint: null,
+            novelData: null, // จะเก็บข้อมูล Novel ทั้งหมดที่ได้จาก server
             generatedOutline: null, 
-            novelData: null
         };
         
         // --- Mock Data for Styles & Rules ---
@@ -496,31 +496,113 @@
             loader.style.display = 'block';
             btnText.style.display = 'none';
 
-            setTimeout(() => {
-                const mockPlot = `จากแนวทางเรื่อง "${titlePrompt}" ในบริบท "${plotContext}" และสไตล์ "${styleText}", เรื่องราวได้เริ่มต้นขึ้น... (เนื้อหาจำลอง)\n\nตัวเอกได้ค้นพบความลับอันดำมืดที่ถูกซ่อนไว้ใต้ฉากหน้าที่สวยงามของสังคม ทำให้ต้องเข้าไปพัวพันกับเหตุการณ์ที่ไม่คาดฝัน เขา/เธอต้องเผชิญหน้ากับศัตรูที่ทรงอำนาจและไขปริศนาเพื่อเปิดโปงความจริง ก่อนที่ทุกอย่างจะสายเกินไป`;
-                settingPromptTextarea.value = mockPlot;
-
+            fetch('/api/generate-plot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    title_prompt: titlePrompt,
+                    style_text: styleText,
+                    plot_context: plotContext
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.plot) {
+                    settingPromptTextarea.value = data.plot;
+                    closeModal(plotModal);
+                } else {
+                    alert('เกิดข้อผิดพลาดในการสร้างพล็อตเรื่อง: ' + (data.details ? JSON.stringify(data.details) : data.error));
+                }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง');
+            })
+            .finally(() => {
                 modalGenBtn.disabled = false;
                 loader.style.display = 'none';
                 btnText.style.display = 'inline-flex';
-                closeModal(plotModal);
-            }, 2500);
+            });
         });
-        
-        // --- Read Chapter Modal Logic ---
-        const MOCK_CHAPTER_TEXT = `ในยามนี้ เคนจิโร่กำลังนั่งอยู่หลังโต๊ะทำงานที่เต็มไปด้วยเอกสารกระจัดกระจายและแก้วกาแฟเย็นชืด สายตาคมกริบของเขากวาดมองข้อมูลบนจอภาพที่เปล่งแสงสีฟ้าสลัว ใบหน้าของชายวัยกลางคนคนหนึ่งถูกฉายขึ้นมาพร้อมกับรายละเอียดคดีเล็กๆ น้อยๆ—การโกงยักยอกเงินจากการลงทุนที่ดูผิวเผินแล้วแสนจะธรรมดา ทว่าสำหรับเคนจิโร่แล้ว ไม่มีคดีใดที่ธรรมดาอย่างแท้จริง`;
+
+        // --- Read/Edit Chapter Modal Logic ---
         function openReadModal(chapterId) {
-            readChapterModal.querySelector('#read-modal-title').textContent = `เนื้อหาบทที่ ${chapterId}`;
-            readChapterModal.querySelector('#read-modal-content').value = `บทที่ ${chapterId}: แสงเงาแห่งนีโอ-โตเกียว (ตัวอย่าง)\n\n${MOCK_CHAPTER_TEXT}`;
-            openModal(readChapterModal);
+            const chapter = appState.novelData.chapters.find(ch => ch.id == chapterId);
+            if (!chapter) {
+                console.error("Chapter not found in local state for ID:", chapterId);
+                return;
+            };
+            
+            const modal = readChapterModal;
+            modal.querySelector('#read-modal-title').textContent = `แก้ไขเนื้อหาบทที่ ${chapter.chapter_number}: ${chapter.title}`;
+            modal.querySelector('#read-modal-content').value = chapter.content || "ยังไม่มีเนื้อหาสำหรับบทนี้";
+            
+            // 💡 CRITICAL FIX: Set the chapterId on the save button's dataset.
+            modal.querySelector('[data-action="save-read-modal"]').dataset.chapterId = chapterId;
+            
+            openModal(modal);
         }
+
+
         readChapterModal.addEventListener('click', (e) => {
-            if (e.target.matches('.modal-close-btn, [data-action="close-read-modal"]')) closeModal(readChapterModal);
-            if (e.target.matches('[data-action="save-read-modal"]')) {
-                alert('บันทึกข้อมูลแล้ว (จำลอง)');
+            // Find the save button, even if the user clicks an icon inside it
+            const saveButton = e.target.closest('[data-action="save-read-modal"]');
+
+            // Handle close button clicks
+            if (e.target.matches('.modal-close-btn, [data-action="close-read-modal"]')) {
+                closeModal(readChapterModal);
+            } 
+            // Handle save button click
+            else if (saveButton) {
+                const chapterId = saveButton.dataset.chapterId;
+                const newContent = document.getElementById('read-modal-content').value;
+            
+                // Disable button and show a loading state to prevent double-clicking
+                saveButton.disabled = true;
+                saveButton.textContent = 'กำลังบันทึก...';
+
+                // Use Fetch API to send the request
+                fetch(`/api/update-chapter/${chapterId}`, {
+                    method: 'PATCH', // Use PATCH for partial updates, as we only send the 'content' field
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ content: newContent }) // Send only the new content
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.chapter) {
+                        // If successful, update the local data state with the new chapter info from the server
+                        const chapterIndex = appState.novelData.chapters.findIndex(ch => ch.id == chapterId);
+                        if (chapterIndex !== -1) {
+                            appState.novelData.chapters[chapterIndex] = data.chapter;
+                        }
+                        closeModal(readChapterModal); // Close the modal
+                    } else {
+                        // If the server returns an error, show it
+                        throw new Error(data.error || 'Could not save changes.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving chapter:', error);
+                    alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+                })
+                .finally(() => {
+                    // Always restore the button to its original state, whether it succeeded or failed
+                    saveButton.disabled = false;
+                    saveButton.textContent = 'บันทึกการเปลี่ยนแปลง';
+                });
+            } 
+            // Handle clicks on the overlay to close the modal
+            else if (e.target === readChapterModal) {
                 closeModal(readChapterModal);
             }
-            if (e.target === readChapterModal) closeModal(readChapterModal);
         });
 
         // --- Event Listener: Blueprint Form Submission ---
@@ -532,12 +614,56 @@
             btnText.style.display = 'none';
             loader.style.display = 'block';
             
-            setTimeout(() => {
-                appState.novelBlueprint = { title_prompt: document.getElementById('title_prompt').value };
-                appState.generatedOutline = getMockOutline();
-                navigateTo('outline-reviewer');
-                setTimeout(() => renderOutlineReview(), 500);
-            }, 3000);
+            navigateTo('outline-reviewer');
+
+            const formData = new FormData(blueprintForm);
+            const dataToSend = {
+                title_prompt: document.getElementById('title_prompt').value,
+                character_nationality: document.getElementById('character_nationality').value,
+                setting_prompt: document.getElementById('setting_prompt').value,
+                style_to_use: document.getElementById('style_to_use').value,
+                act_count: document.getElementById('act_count').value,
+                custom_style_guide: document.getElementById('custom_style_guide').value,
+                custom_genre_rules: document.getElementById('custom_genre_rules').value,
+            };
+
+            fetch('/api/generate-outline', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(dataToSend)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // --- 💡 EDIT: Check for outline_data ---
+                if (data.outline_data && data.outline_data.story && data.outline_data.story_bible) {
+                    appState.novelData = data; // Store the whole novel object
+                    appState.generatedOutline = data.outline_data; // Extract the outline part
+                    renderOutlineReview();
+                } else {
+                    alert('เกิดข้อผิดพลาด: ไม่ได้รับข้อมูลโครงเรื่องที่ถูกต้องจากเซิร์ฟเวอร์');
+                    console.error("Invalid outline data received:", data);
+                    navigateTo('blueprint-creator'); // Go back to the form
+                }
+            })
+            .catch(error => {
+                console.error('Error generating outline:', error);
+                alert('เกิดข้อผิดพลาดในการสร้างโครงเรื่อง: ' + (error.details ? JSON.stringify(error.details) : error.error || 'Unknown error'));
+                navigateTo('blueprint-creator');
+            })
+            .finally(() => {
+                generateBtn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+            });
         });
         
         // --- Render Outline Review Page ---
@@ -563,19 +689,27 @@
 
         // --- Event Listener: Confirm Outline ---
         confirmOutlineBtn.addEventListener('click', () => {
-             appState.novelData = {
-                title: appState.generatedOutline.story.title,
-                totalChapters: appState.generatedOutline.story.acts.flatMap(a => a.chapters).length,
-                acts: appState.generatedOutline.story.acts.map(act => ({
-                    title: act.summary,
-                    chapters: act.chapters.map(chap => ({ id: chap.no, title: chap.title, status: 'locked' }))
-                }))
-             };
-             if(appState.novelData.acts[0]?.chapters[0]){
-                 appState.novelData.acts[0].chapters[0].status = 'ready';
-             }
-             navigateTo('writing-dashboard');
-             initializeDashboard();
+            // Update appState.novelData with the final confirmed data if needed, but it's already set.
+            // Now, we prepare the chapter data for the dashboard.
+            
+            const allChapters = appState.novelData.outline_data.story.acts.flatMap(a => a.chapters);
+            
+            // Match the chapters from the novel object with the outline data to set initial status
+            appState.novelData.chapters.forEach(dbChapter => {
+                const outlineChapter = allChapters.find(oc => oc.no == dbChapter.chapter_number);
+                if(outlineChapter){
+                    dbChapter.title = outlineChapter.title; // Ensure title from outline is used
+                    dbChapter.initial_summary = outlineChapter.summary; // Keep initial summary for reference
+                }
+            });
+
+            // Set the first chapter to 'ready'
+            if (appState.novelData.chapters[0]) {
+                 appState.novelData.chapters[0].status = 'ready';
+            }
+
+            navigateTo('writing-dashboard');
+            initializeDashboard();
         });
 
         // --- Dashboard Logic ---
@@ -584,18 +718,26 @@
             const chapterListContainer = document.getElementById('chapter-list');
             chapterListContainer.innerHTML = ''; // Clear previous content
             
-            appState.novelData.acts.forEach(act => {
+            const actsData = appState.novelData.outline_data.story.acts;
+
+            actsData.forEach(act => {
                 const actTitle = document.createElement('h2');
                 actTitle.className = 'act-title';
-                actTitle.textContent = act.title.length > 100 ? act.title.slice(0, 100) + '...' : act.title;
+                actTitle.textContent = act.summary.length > 100 ? act.summary.slice(0, 100) + '...' : act.summary;
                 chapterListContainer.appendChild(actTitle);
-                act.chapters.forEach(chapter => {
+                
+                // Filter chapters from the main novel data that belong to this act
+                const actChapters = appState.novelData.chapters.filter(dbChapter => {
+                    return act.chapters.some(ac => ac.no == dbChapter.chapter_number);
+                });
+
+                actChapters.forEach(chapter => {
                     const chapterElement = document.createElement('div');
                     chapterElement.className = 'chapter-item';
-                    chapterElement.dataset.chapterId = chapter.id;
+                    chapterElement.dataset.chapterId = chapter.id; // Use database ID
                     chapterElement.innerHTML = `
                         <div class="chapter-info">
-                            <span class="status-indicator"></span><span class="chapter-number">บทที่ ${chapter.id}</span>
+                            <span class="status-indicator"></span><span class="chapter-number">บทที่ ${chapter.chapter_number}</span>
                             <h3 class="chapter-title">${chapter.title}</h3>
                         </div>
                         <div class="chapter-actions">
@@ -611,29 +753,53 @@
         }
 
         function renderDashboardUI() {
-            if (!appState.novelData) return;
+            if (!appState.novelData || !appState.novelData.chapters) return;
             let completedCount = 0;
-            const allChapters = appState.novelData.acts.flatMap(act => act.chapters);
+            const totalChapters = appState.novelData.chapters.length;
             
-            allChapters.forEach(chapter => {
+            appState.novelData.chapters.forEach(chapter => {
                 const element = document.querySelector(`.chapter-item[data-chapter-id='${chapter.id}']`);
                 if (!element) return;
+                
+                // Determine the latest completed chapter to unlock the next one
+                if (chapter.status === 'completed') {
+                    completedCount++;
+                }
+
+                // Set status for styling
                 element.dataset.status = chapter.status;
-                if (chapter.status === 'completed' || chapter.status === 'latest') completedCount++;
+
                 const actions = element.querySelector('.chapter-actions');
                 const [loader, readBtn, rewriteBtn, writeBtn] = actions.children;
                 loader.style.display = 'none'; readBtn.style.display = 'none';
                 rewriteBtn.style.display = 'none'; writeBtn.style.display = 'none';
-                if (chapter.status === 'completed') readBtn.style.display = 'block';
-                if (chapter.status === 'latest') { readBtn.style.display = 'block'; rewriteBtn.style.display = 'block'; }
-                if (chapter.status === 'ready') writeBtn.style.display = 'block';
-            });
 
-            document.getElementById('progress-bar').style.width = `${(completedCount / appState.novelData.totalChapters) * 100}%`;
-            document.getElementById('progress-text').textContent = `${completedCount} / ${appState.novelData.totalChapters} บท`;
+                if (chapter.status === 'completed') {
+                    readBtn.style.display = 'block';
+                    rewriteBtn.style.display = 'block';
+                } else if (chapter.status === 'ready') {
+                    writeBtn.style.display = 'block';
+                }
+            });
+            
+            // After counting completed, find the first non-completed and set it to ready
+            const firstNotCompleted = appState.novelData.chapters.find(ch => ch.status !== 'completed');
+            if(firstNotCompleted && firstNotCompleted.status !== 'ready') {
+                firstNotCompleted.status = 'ready';
+                // Re-render the specific item
+                const element = document.querySelector(`.chapter-item[data-chapter-id='${firstNotCompleted.id}']`);
+                if(element) {
+                    element.dataset.status = 'ready';
+                    element.querySelector('[data-action="write"]').style.display = 'block';
+                }
+            }
+
+
+            document.getElementById('progress-bar').style.width = `${(completedCount / totalChapters) * 100}%`;
+            document.getElementById('progress-text').textContent = `${completedCount} / ${totalChapters} บท`;
             
             const autoWriteBtn = document.getElementById('dashboard-auto-write-btn');
-            const allCompleted = allChapters.every(ch => ch.status === 'completed');
+            const allCompleted = completedCount === totalChapters;
             document.getElementById('completion-actions').style.display = allCompleted ? 'flex' : 'none';
             autoWriteBtn.style.display = allCompleted ? 'none' : 'inline-flex';
             autoWriteBtn.disabled = false;
@@ -641,48 +807,53 @@
             autoWriteBtn.querySelector('.loader').style.display = 'none';
         }
         
-        function handleChapterGeneration(chapterId, isRewrite = false, callback = null) {
+        function handleChapterGeneration(chapterId) {
             const element = document.querySelector(`.chapter-item[data-chapter-id='${chapterId}']`);
             const actions = element.querySelector('.chapter-actions');
             actions.querySelector('.loader').style.display = 'block';
             Array.from(actions.querySelectorAll('.btn')).forEach(btn => btn.style.display = 'none');
             
-            setTimeout(() => {
-                const allChapters = appState.novelData.acts.flatMap(act => act.chapters);
-                const currentChapter = allChapters.find(ch => ch.id === chapterId);
-
-                if (!isRewrite && currentChapter) {
-                    const currentLatest = allChapters.find(ch => ch.status === 'latest');
-                    if (currentLatest) currentLatest.status = 'completed';
-                    
-                    const isLastChapter = (chapterId === appState.novelData.totalChapters);
-                    currentChapter.status = isLastChapter ? 'completed' : 'latest';
-
-                    if (!isLastChapter) {
-                        const nextChapter = allChapters.find(ch => ch.id === chapterId + 1);
-                        if (nextChapter) nextChapter.status = 'ready';
-                    }
+            fetch(`/api/write-chapter/${chapterId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' && data.chapter) {
+                    // Update the chapter data in our appState
+                    const chapterIndex = appState.novelData.chapters.findIndex(ch => ch.id == chapterId);
+                    if (chapterIndex !== -1) {
+                        appState.novelData.chapters[chapterIndex] = data.chapter;
+                    }
+                    renderDashboardUI();
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+            })
+            .catch(error => {
+                console.error('Error writing chapter:', error);
+                alert('เกิดข้อผิดพลาดในการเขียนบท: ' + (error.details ? JSON.stringify(error.details) : error.error || 'Unknown error'));
+                // Restore UI on error
+                actions.querySelector('.loader').style.display = 'none';
                 renderDashboardUI();
-                if (callback) callback();
-            }, callback ? 1000 : 2500); // Shorter delay when auto-writing
+            });
         }
 
-        function startAutoWriting() {
-            const nextChapterToWrite = appState.novelData.acts.flatMap(act => act.chapters).find(ch => ch.status === 'ready');
-            if (nextChapterToWrite) {
-                handleChapterGeneration(nextChapterToWrite.id, false, startAutoWriting);
-            } else {
-                renderDashboardUI();
-            }
-        }
-        
         document.getElementById('dashboard-auto-write-btn').addEventListener('click', (e) => {
             const btn = e.currentTarget;
             btn.disabled = true;
             btn.querySelector('span').textContent = 'กำลังเขียน...';
             btn.querySelector('.loader').style.display = 'inline-block';
-            startAutoWriting();
+            // Auto-write logic to be implemented
         });
 
         document.getElementById('chapter-list').addEventListener('click', (e) => {
@@ -690,25 +861,13 @@
             if (!button) return;
             const chapterId = parseInt(button.closest('.chapter-item').dataset.chapterId);
             const action = button.dataset.action;
-            if (action === 'write') handleChapterGeneration(chapterId, false);
-            else if (action === 'rewrite') handleChapterGeneration(chapterId, true);
+            if (action === 'write') handleChapterGeneration(chapterId);
+            else if (action === 'rewrite') handleChapterGeneration(chapterId); // For now, rewrite does the same as write
             else if (action === 'read') openReadModal(chapterId);
         });
         
-        // --- Mock Data for Outline ---
-        function getMockOutline() {
-            return {
-                "story": { "title": "ปริศนาแห่งเซ็นทินัล", "theme": "การแสวงหาความจริงในยุคที่เทคโนโลยีบิดเบือนทุกสิ่ง",
-                    "acts": [ { "act": 1, "summary": "องก์ที่ 1 เปิดตัวเคนจิโร่ อาซาฮี และนำเสนอคดีแรกที่ดูเหมือนเป็นเพียงคนหาย...",
-                            "chapters": [ { "no": 1, "title": "แสงเงาแห่งนีโอ-โตเกียว", "summary": "เคนจิโร่ อาซาฮี นักสืบเอกชน ได้รับการว่าจ้างจากหญิงชราให้ตามหาหลานชายที่หายตัวไป..." }, { "no": 2, "title": "ร่องรอยในข้อมูลดิจิทัล", "summary": "เคนจิโร่และมิคาโกะพบไฟล์ที่ถูกเข้ารหัสในคอมพิวเตอร์ของบุคคลที่หายไป..." }, { "no": 3, "title": "การเผชิญหน้าในอาณาจักรแห่งเทคโนโลยี", "summary": "เคนจิโร่บุกไปที่ 'เทคคอร์ป' และได้พบกับ CEO ผู้เยือกเย็น..." }, { "no": 4, "title": "คำเตือนจากเงามืด", "summary": "ไฟล์ที่ถอดรหัสได้เผยถึงโปรเจกต์ลับ และเคนจิโร่ถูกสะกดรอยตาม..." }, { "no": 5, "title": "ปมปริศนาที่ซับซ้อน", "summary": "เคนจิโร่เริ่มเชื่อมโยงข้อมูลและพบความไม่ชอบมาพากลของเทคคอร์ป..." } ] },
-                        { "act": 2, "summary": "องก์ที่ 2 เคนจิโร่เริ่มเจาะลึกเข้าไปในเครือข่ายของ 'โครงการเซ็นทินัล'...",
-                            "chapters": [ { "no": 6, "title": "เงาตามรอย", "summary": "การสืบสวนนำเขาไปสู่กลุ่มนักเคลื่อนไหว 'เดอะเรนเจอร์ส'..." }, { "no": 7, "title": "การถอดรหัสที่ซับซ้อน", "summary": "มิคาโกะถอดรหัสไฟล์ได้สำเร็จ เผยให้เห็นเทคโนโลยีควบคุมพฤติกรรม..." }, { "no": 8, "title": "ความจริงอันบิดเบือน", "summary": "เคนจิโร่ตามรอยไปยังศูนย์ทดลองลับและถูกขัดขวาง..." }, { "no": 9, "title": "เหยื่อที่ถูกลืม", "summary": "เขาพบนักวิจัยอีกคนที่หายไปในสภาพจิตไม่สมประกอบ..." }, { "no": 10, "title": "คำสารภาพของปีศาจ", "summary": "เคนจิโร่เผชิญหน้ากับ CEO อีกครั้ง พร้อมกับหลักฐาน..." } ] },
-                        { "act": 3, "summary": "องก์ที่ 3 คือจุดสูงสุดของการต่อสู้ เคนจิโร่ต้องเปิดโปงความจริงทั้งหมด...",
-                            "chapters": [ { "no": 11, "title": "กับดักในเขาวงกตข้อมูล", "summary": "เคนจิโร่และมิคาโกะพยายามเจาะระบบหลักของเทคคอร์ป..." }, { "no": 12, "title": "คืนแห่งการตัดสิน", "summary": "เคนจิโร่แทรกซึมเข้าไปในใจกลางเซิร์ฟเวอร์หลัก..." }, { "no": 13, "title": "เปิดโปงความจริง", "summary": "ข้อมูลลับถูกปล่อยสู่สาธารณะ สร้างความโกลาหลในเมือง..." }, { "no": 14, "title": "การเผชิญหน้าครั้งสุดท้าย", "summary": "เคนจิโร่เผชิญหน้ากับ CEO เป็นครั้งสุดท้าย..." }, { "no": 15, "title": "แสงสุดท้ายในมหานคร", "summary": "ยูจิโร่ถูกจับกุม และเคนจิโร่กลับมายังสำนักงานของเขา..." } ] } ] },
-                "story_bible": { "characters": [ { "name": "เคนจิโร่ อาซาฮี", "role": "นักสืบเอกชนผู้ฉลาดหลักแหลม ช่างสังเกต..." }, { "name": "มิคาโกะ ทานากะ", "role": "แฮกเกอร์อิสระอัจฉริยะและเป็นผู้ช่วย..." }, { "name": "ยูจิโร่ ฮายาชิ", "role": "CEO ของ 'เทคคอร์ป' ผู้ทรงอิทธิพลและมีวิสัยทัศน์..." } ],
-                    "world_and_lore": [ "นีโอ-โตเกียว: มหานครแห่งอนาคตที่เต็มไปด้วยแสงสีนีออน...", "โครงการเซ็นทินัล: โปรเจกต์ลับสุดยอดของเทคคอร์ป..." ] } };
-        }
     });
     </script>
 </body>
 </html>
+
