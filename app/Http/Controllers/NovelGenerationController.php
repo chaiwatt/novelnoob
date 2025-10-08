@@ -387,9 +387,11 @@ class NovelGenerationController extends Controller
         }
     }
 
+    /**
+     * Creates a prompt for the AI to write a chapter's content, with clear separation for the first chapter vs. subsequent chapters.
+     */
     private function createChapterWritingPrompt(Novel $novel, NovelChapter $chapter, ?NovelChapter $previousChapter): string
     {
-        // Always get the initial summary from the outline data
         $initialSummary = 'ไม่มีข้อมูลสรุปเบื้องต้น';
         $outline = $novel->outline_data;
         if (isset($outline['story']['acts']) && is_array($outline['story']['acts'])) {
@@ -405,25 +407,8 @@ class NovelGenerationController extends Controller
             }
         }
 
-        $promptParts = [];
-
-        // CASE 1: Subsequent Chapters (not the first one)
-        if ($previousChapter && $previousChapter->content) {
-            $promptParts = [
-                "คุณคือ AI ที่เชี่ยวชาญด้านการเขียนประโยคถัดไปของเรื่องราวที่มีอยู่ ภารกิจเดียวของคุณคือการเขียน 'ย่อหน้าถัดไป' ให้ต่อเนื่องกับข้อความที่ให้มาเท่านั้น",
-                "--- นี่คือข้อความล่าสุดของเรื่องราว ---",
-                $previousChapter->content,
-                "--- จบข้อความล่าสุด ---",
-                "--- คำสั่งที่สำคัญที่สุด ---",
-                "1. อ่านข้อความล่าสุดให้เข้าใจ **แล้วเขียนย่อหน้าถัดไปต่อจากตอนจบของข้อความนั้นทันที**",
-                "2. **ห้ามเริ่มต้นฉากใหม่โดยเด็ดขาด** ห้ามมีเสียงเตือนภัย หรือเหตุการณ์ที่เกิดขึ้นกะทันหัน ถ้ามันไม่ต่อเนื่องจากประโยคสุดท้ายของข้อความล่าสุด",
-                "3. ในระหว่างที่เขียนต่อไป ให้พยายามดำเนินเรื่องไปสู่ 'เป้าหมาย' นี้อย่างช้าๆ และเป็นธรรมชาติ: " . $initialSummary,
-                "4. เขียนให้ได้ความยาวประมาณ " . $chapter->word_count . " คำ",
-                "5. ตอบกลับมาเป็นเนื้อหานิยายเท่านั้น ไม่ต้องมีคำอธิบายอื่นใด",
-            ];
-        } 
         // CASE 2: The Very First Chapter
-        else {
+        if (!$previousChapter) {
             $styleMapping = [
                 'style_detective' => 'แนวสืบสวนสอบสวน',
                 'style_erotic' => 'แนวอิโรติก',
@@ -433,7 +418,7 @@ class NovelGenerationController extends Controller
             $genreName = $styleMapping[$novel->style] ?? '';
             
             $promptParts = [
-                "คุณคือสุดยอดนักเขียนนิยายมืออาชีพ ภารกิจของคุณคือการเริ่มต้นเขียนบทแรกของนิยายเรื่องใหม่",
+                "คุณคือผู้ช่วยนักเขียนนิยายมืออาชีพ ภารกิจของคุณคือการเริ่มต้นเขียนบทแรกของนิยายเรื่องใหม่",
                 "--- ข้อมูลภาพรวมของนิยาย ---",
                 "- **ชื่อเรื่อง:** " . $novel->title,
                 "- **แนวเรื่อง:** " . $genreName,
@@ -449,72 +434,29 @@ class NovelGenerationController extends Controller
                 "4. ไม่ต้องเขียนชื่อบทหรือคำว่า 'บทที่' ซ้ำอีก ให้เริ่มต้นเขียนเนื้อหาได้เลย",
                 "5. ตอบกลับมาเป็นเนื้อหานิยายเท่านั้น ไม่ต้องมีคำอธิบายอื่นใด",
             ];
-        }
-
-        return implode("\n\n", $promptParts);
-    }
-
-    private function createChapterWritingPrompt_notuse(Novel $novel, NovelChapter $chapter, ?NovelChapter $previousChapter): string
-    {
-        $initialSummary = 'ไม่มีข้อมูลสรุปเบื้องต้น';
-        $outline = $novel->outline_data;
-        if (isset($outline['story']['acts']) && is_array($outline['story']['acts'])) {
-            foreach ($outline['story']['acts'] as $act) {
-                if (isset($act['chapters']) && is_array($act['chapters'])) {
-                    foreach ($act['chapters'] as $chapterData) {
-                        if (isset($chapterData['no']) && $chapterData['no'] == $chapter->chapter_number) {
-                            $initialSummary = $chapterData['summary'] ?? 'ไม่มีข้อมูลสรุปเบื้องต้น';
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        $promptParts = [
-            "คุณคือสุดยอดนักเขียนนิยายมืออาชีพ ภารกิจของคุณคือเขียนเนื้อหาสำหรับบทต่อไปนี้ให้สมบูรณ์ โดยต้องรักษาความต่อเนื่องของเนื้อเรื่องอย่างเข้มงวดที่สุด",
-        ];
-
-        if ($previousChapter && $previousChapter->ending_summary) {
-            $promptParts[] = "--- !! บริบทสำคัญ: ต้องเขียนต่อจากตอนจบของบทที่แล้วนี้ทันที !! ---";
-            $promptParts[] = "นี่คือ 2 ย่อหน้าสุดท้ายของบทที่ " . $previousChapter->chapter_number . " (ตอนจบ):";
-            $promptParts[] = $previousChapter->ending_summary;
-            $promptParts[] = "--------------------------------------------------------------------";
-        } else {
-            // **EDIT:** Make the intro prompt genre-specific
-            $styleMapping = [
-                'style_detective' => 'แนวสืบสวนสอบสวน',
-                'style_erotic' => 'แนวอิโรติก',
-                'style_romance' => 'แนวโรแมนติก',
-                'style_sci-fi' => 'แนววิทยาศาสตร์',
+        } 
+        // CASE 1: Subsequent Chapters
+        else {
+            $promptParts = [
+                "คุณคือผู้ช่วยนักเขียนนิยายมืออาชีพ ภารกิจที่สำคัญที่สุดของคุณ คือการเขียน 'ย่อหน้าถัดไป' ของเรื่องราวที่มีอยู่ โดยต้องรักษาความต่อเนื่องของฉากและอารมณ์อย่างสมบูรณ์แบบ",
+                "--- เนื้อเรื่องล่าสุด (ฉากปัจจุบัน) ---",
+                $previousChapter->content,
+                "--- จบเนื้อเรื่องล่าสุด ---",
+                "\n--- กฎการเขียน (ต้องปฏิบัติตามอย่างเคร่งครัด) ---",
+                "**กฎข้อที่ 1 (สำคัญที่สุด):** เขียนต่อจากประโยคสุดท้ายของ 'เนื้อเรื่องล่าสุด' ทันที",
+                "**กฎข้อที่ 2:** รักษาความต่อเนื่องของฉากและอารมณ์อย่างเคร่งครัด - ตัวละครต้องอยู่ในสถานที่เดิมและมีอารมณ์ต่อเนื่องจากย่อหน้าสุดท้าย ห้ามย้ายฉากหรือเปลี่ยนอารมณ์ของตัวละครอย่างกะทันหันโดยไม่มีเหตุผล",
+                "**กฎข้อที่ 3:** ใช้ 'เป้าหมายของบทนี้' เป็นเพียงทิศทางไกลๆ เท่านั้น ไม่ใช่สิ่งที่ต้องทำให้สำเร็จในย่อหน้าถัดไป",
+                "**กฎข้อที่ 4:** เขียนให้ได้ความยาวประมาณ " . $chapter->word_count . " คำ",
+                "**กฎข้อที่ 5:** ตอบกลับมาเป็นเนื้อหานิยายเท่านั้น ไม่ต้องมีคำอธิบายอื่นใด",
+                "\n--- เป้าหมายของบทนี้ (ทิศทาง) ---",
+                $initialSummary,
             ];
-            $genreName = $styleMapping[$novel->style] ?? ''; // Get the Thai genre name
-            $promptParts[] = "นี่คือบทแรกของเรื่อง โปรดเริ่มต้นเรื่องราว{$genreName}อย่างน่าประทับใจและตรงตามบรรยากาศของแนวเรื่อง";
         }
-
-        $promptParts[] = "--- แผนการเขียนสำหรับบทปัจจุบัน (บทที่ " . $chapter->chapter_number . ") ---";
-        $promptParts[] = "- **ชื่อบท:** " . $chapter->title;
-        $promptParts[] = "- **เป้าหมายของบทนี้ (จากโครงเรื่อง):** " . $initialSummary;
-        $promptParts[] = "--------------------------------------------------------------------";
-
-        $promptParts[] = "--- ข้อมูลภาพรวมของนิยาย (เพื่อรักษาโทนเรื่อง) ---";
-        $promptParts[] = "- **ชื่อเรื่อง:** " . $novel->title;
-        $promptParts[] = "- **ธีมเรื่อง:** " . ($novel->outline_data['story']['theme'] ?? 'N/A');
-        $promptParts[] = "--------------------------------------------------------------------";
-
-        $promptParts[] = "--- !! คำสั่งสำคัญ !! ---";
-        $promptParts[] = "1. **เขียนเนื้อหาของบทที่ " . $chapter->chapter_number . " โดยเริ่มเรื่องต่อจาก 'ตอนจบของบทที่แล้ว' ทันที**";
-        $promptParts[] = "2. ใช้ 'เป้าหมายของบทนี้' เป็นแนวทางในการดำเนินเรื่องไปข้างหน้า";
-        $promptParts[] = "3. **รักษาความต่อเนื่องของตัวละคร สถานที่ และเหตุการณ์ให้ถูกต้อง 100%** (เช่น ถ้าตัวละครชื่อ 'วอลคอฟ' ในบทที่แล้ว บทนี้ก็ต้องเป็น 'วอลคอฟ')";
-        $promptParts[] = "4. เขียนให้ได้ความยาวประมาณ " . $chapter->word_count . " คำ";
-        $promptParts[] = "5. ไม่ต้องเขียนชื่อบทหรือคำว่า 'บทที่' ซ้ำอีก ให้เริ่มต้นเขียนเนื้อหาได้เลย";
-        $promptParts[] = "6. ตอบกลับมาเป็นเนื้อหานิยายเท่านั้น ไม่ต้องมีคำอธิบายอื่นใด";
 
         return implode("\n\n", $promptParts);
     }
-     /**
-     * Creates a prompt for the AI to write a chapter's content.
-     */
+
+
 
 
     /**
