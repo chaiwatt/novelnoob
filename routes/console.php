@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('app:forex-price-alert-command')
-    ->everyFiveMinutes();
+    ->hourly();
