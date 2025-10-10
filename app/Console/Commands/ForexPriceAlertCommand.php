@@ -213,7 +213,7 @@ class ForexPriceAlertCommand extends Command
             $alertModel = ForexPriceAlert::find($result['id']);
 
             if ($alertModel) {
-                $alertModel->pips_away = $result['pips_away'];
+                $alertModel->pips_away = (int) $result['pips_away'];
                 $alertModel->close_price = $result['close_price']; 
                 
                 // 🚨 NEW: อัปเดตฟิลด์ reversal
