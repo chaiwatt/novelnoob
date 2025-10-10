@@ -8,6 +8,7 @@ class ForexPriceAlert extends Model
 {
     protected $fillable = [
         'pair',
+        'close_price',
         'type',
         'target_price',
         'pips_away',

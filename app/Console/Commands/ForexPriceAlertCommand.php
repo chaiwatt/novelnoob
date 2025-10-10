@@ -154,6 +154,7 @@ class ForexPriceAlertCommand extends Command
                 'id'            => $alert->id,
                 'pips_away'     => $pipsAway,
                 'is_alert'      => ($pipsAway <= 0),
+                'close_price'   => $closePrice,
             ];
         }
 
@@ -164,6 +165,7 @@ class ForexPriceAlertCommand extends Command
 
             if ($alertModel) {
                 $alertModel->pips_away = $result['pips_away'];
+                $alertModel->close_price = $result['close_price']; 
                 // 🚨 หากต้องการเพิ่ม Logic การแจ้งเตือน ให้ทำที่นี่
                 $alertModel->save();
                 $updateCount++;

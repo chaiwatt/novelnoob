@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('forex_price_alerts', function (Blueprint $table) {
             $table->id();
             $table->string('pair')->nullable();
+            $table->double('close_price',10,5)->nullable();
             $table->string('type')->nullable();
             $table->double('target_price',10,5)->nullable();
             $table->char('pips_away')->default(0);
