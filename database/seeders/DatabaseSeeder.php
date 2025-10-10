@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ForexPriceAlertSeeder::class,
             UserSeeder::class,
+            TwelvedataApiSeeder::class
 
         ]);
 
