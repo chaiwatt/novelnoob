@@ -232,7 +232,6 @@ class ForexPriceAlertCommand extends Command
                     $messageContent = "*🚨 Forex Reversal Alert 🚨*\n\n"
                                     . "💰 *Pair:* {$alertModel->pair} ({$alertModel->type})\n"
                                     . "🎯 *Target Price:* {$alertModel->target_price}\n"
-                                    . "💵 *Current Price:* {$result['close_price']}\n"
                                     . "📏 *Pips Past Target:* {$result['pips_away']} pips\n"
                                     . "🔄 *Reversal Confirmed!* ({$timeframe} Bar: {$result['bar_datetime']})";
 
