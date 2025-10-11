@@ -26,12 +26,7 @@ class ForexPriceAlertCommand extends Command
     // ตั้งค่าขนาดชุด Symbol สูงสุดที่ API อนุญาตต่อการเรียก 1 ครั้ง
     protected const API_CHUNK_SIZE = 5;
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-    /**
+      /**
      * Execute the console command.
      *
      * @return int
@@ -39,6 +34,7 @@ class ForexPriceAlertCommand extends Command
     public function handle()
     {
         $timeframe = '4h'; // ตั้งค่า Timeframe ที่ต้องการ
+        $this->info('Starting Forex Price Alert Command...');
 
         // 1. ดึงข้อมูล Alert ทั้งหมดจากฐานข้อมูล
         $forexPriceAlerts = ForexPriceAlert::all();
@@ -63,7 +59,7 @@ class ForexPriceAlertCommand extends Command
         $symbolChunks = $allSymbols->chunk(self::API_CHUNK_SIZE);
         $finalHistoryData = [];
 
-        // 3. วนลูปผ่านแต่ละชุด Symbol (Chunking)
+        // 3. วนลูปผ่านแต่ละชุด Symbol (Chunking) เพื่อเรียก API
         foreach ($symbolChunks as $chunk) {
             $currentSymbolList = $chunk->implode(',');
             $isSingleSymbol = $chunk->count() === 1;
@@ -93,7 +89,7 @@ class ForexPriceAlertCommand extends Command
                 $dataToProcess = $data;
             }
             
-            // 3.5 ประมวลผลข้อมูล (รวม high/low/close ทั้งหมด)
+            // 3.5 ประมวลผลข้อมูล
             foreach ($chunk as $symbol) {
                 if (isset($dataToProcess[$symbol]) && isset($dataToProcess[$symbol]['values'])) {
                     $values = $dataToProcess[$symbol]['values'];
@@ -106,9 +102,9 @@ class ForexPriceAlertCommand extends Command
                                 'symbol' => $symbol, 
                                 'index' => $index, 
                                 'datetime' => $item['datetime'],
-                                'open' => (float) $item['open'], // เพิ่ม Open
-                                'high' => (float) $item['high'], // เพิ่ม High
-                                'low' => (float) $item['low'],   // เพิ่ม Low
+                                'open' => (float) $item['open'], 
+                                'high' => (float) $item['high'], 
+                                'low' => (float) $item['low'],   
                                 'close' => (float) $item['close']
                             ];
                         })->toArray();
@@ -120,7 +116,7 @@ class ForexPriceAlertCommand extends Command
         
         // 4. กรองเอาเฉพาะแท่งที่ Index 1 (Bar 2: แท่งก่อนล่าสุด) สำหรับคำนวณ Pips Away
         $pipsBarData = collect($finalHistoryData)
-                        ->filter(fn($item) => $item['index'] === 1) // ใช้ index 1 (แท่งก่อนล่าสุด)
+                        ->filter(fn($item) => $item['index'] === 1) 
                         ->values(); 
 
         if ($pipsBarData->isEmpty()) {
@@ -130,7 +126,7 @@ class ForexPriceAlertCommand extends Command
 
         // 5. เตรียมข้อมูลราคาสำหรับการค้นหาที่รวดเร็ว
         $priceLookup = $pipsBarData->keyBy('symbol');
-        $fullHistoryLookup = collect($finalHistoryData)->groupBy('symbol'); // สำหรับ Reversal Check
+        $fullHistoryLookup = collect($finalHistoryData)->groupBy('symbol');
         $alertsToUpdate = [];
 
         // 6. วนลูป Alert จาก DB เพื่อคำนวณ Pips Away และตรวจสอบ Reversal
@@ -162,32 +158,30 @@ class ForexPriceAlertCommand extends Command
 
             $pipsAway = round($difference * $pipMultiplier, 2);
             $reversalFlag = 0; // ค่าเริ่มต้น
+            $isPriceReached = ($pipsAway > 0); // Price Reached: pipsAway > 0
+            
+            $barDatetime = $priceBar['datetime']; // 👈 ดึง datetime ของแท่งที่ใช้คำนวณ (Index 1)
 
-            // 6.5 💥💥 Logic ตรวจสอบ Reversal 💥💥
-            // 🚨 เงื่อนไข: pipsAway > 0 (ราคาถึง/เลย Target แล้ว)
-            if ($pipsAway > 0) { 
+            // 6.5 Logic ตรวจสอบ Reversal: ตรวจสอบเมื่อราคาถึง Target แล้ว
+            if ($isPriceReached) { 
                 $currentHistory = $fullHistoryLookup->get($apiSymbol);
 
-                // ต้องมีแท่งเทียนอย่างน้อย 2 แท่ง (index 0, 1) สำหรับการคำนวณนี้
                 if ($currentHistory && $currentHistory->count() >= 2) {
                     
-                    // แท่งที่ 3 (เก่าสุด) คือ index 0 (แท่งที่ 1 ที่จะนำมาเปรียบเทียบ)
+                    // แท่งที่ 3 (เก่าสุด) คือ index 0 
                     $barIndex0 = $currentHistory->firstWhere('index', 0); 
                     
-                    // แท่งที่ 2 (Previous Bar) คือ index 1 (แท่งที่ 2 ที่จะนำมาเปรียบเทียบ)
+                    // แท่งที่ 2 (Previous Bar) คือ index 1
                     $barIndex1 = $currentHistory->firstWhere('index', 1); 
                     
-                    // ใช้ barIndex0 (Index 0) และ barIndex1 (Index 1) ในการคิด Reversal
                     if ($barIndex0 && $barIndex1) {
                         if ($type === 'BUY') {
                             // Reversal BUY: close[Index 1] - high[Index 0] > 0
-                            // (ราคาปิดแท่ง Index 1 ทะลุ High ของแท่ง Index 0)
                             if (($barIndex1['close'] - $barIndex0['high']) > 0) {
                                 $reversalFlag = 1;
                             }
                         } elseif ($type === 'SELL') {
                             // Reversal SELL: close[Index 1] - low[Index 0] < 0
-                            // (ราคาปิดแท่ง Index 1 ทะลุ Low ของแท่ง Index 0)
                             if (($barIndex1['close'] - $barIndex0['low']) < 0) {
                                 $reversalFlag = 1;
                             }
@@ -200,26 +194,67 @@ class ForexPriceAlertCommand extends Command
             $alertsToUpdate[] = [
                 'id'            => $alert->id,
                 'pips_away'     => $pipsAway,
-                // 🚨 ถ้า pipsAway > 0 คือ Alert
-                'is_alert'      => ($pipsAway > 0), 
+                'is_alert'      => $isPriceReached, 
                 'close_price'   => $closePrice,
-                'reversal_flag' => $reversalFlag, // บันทึกสถานะ Reversal
+                'reversal_flag' => $reversalFlag, 
+                'bar_datetime'  => $barDatetime, // 👈 เก็บ Datetime
             ];
         }
 
-        // 7. 💥💥 อัปเดตฐานข้อมูลด้วยค่า pips_away, close_price และ reversal 💥💥
+        // 7. 💥💥 อัปเดตฐานข้อมูลและส่ง Notification 💥💥
+        // กำหนด Telegram Token และ Chat ID
+        $telegramToken = env('TELEGRAM_BOT_TOKEN'); // 👈 แก้ไขตามคำขอ
+        $chatId = env('TELEGRAM_CHAT_ID'); 
+        
+        // ตรวจสอบว่ามี Token และ Chat ID หรือไม่
+        if (empty($telegramToken) || empty($chatId)) {
+            $this->error('Telegram BOT_TOKEN or CHAT_ID is missing in .env file. Cannot send notifications.');
+            // ยังคงดำเนินการอัปเดต DB ต่อไปได้ แต่จะไม่ส่งแจ้งเตือน
+        }
+        
+        $telegramUrl = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
+        
         $updateCount = 0;
         foreach ($alertsToUpdate as $result) {
             $alertModel = ForexPriceAlert::find($result['id']);
 
             if ($alertModel) {
-                $alertModel->pips_away = (int) $result['pips_away'];
+                
+                // ตรวจสอบเงื่อนไข Notification: (Price Reached) AND (Reversal Confirmed)
+                $shouldNotify = $result['is_alert'] && ($result['reversal_flag'] === 1);
+                
+                // ตรวจสอบการแจ้งเตือนซ้ำ: หากควรแจ้งเตือน และ Datetime ของแท่งเทียนใหม่กว่า Datetime ที่แจ้งไปแล้ว
+                $isNewAlertData = $alertModel->last_alert_sent_at !== $result['bar_datetime'];
+
+                if ($shouldNotify && $isNewAlertData && $telegramToken && $chatId) {
+                    
+                    // 🚨 Logic การแจ้งเตือน: Telegram
+                    $messageContent = "*🚨 Forex Reversal Alert 🚨*\n\n"
+                                    . "💰 *Pair:* {$alertModel->pair} ({$alertModel->type})\n"
+                                    . "🎯 *Target Price:* {$alertModel->target_price}\n"
+                                    . "💵 *Current Price:* {$result['close_price']}\n"
+                                    . "📏 *Pips Past Target:* {$result['pips_away']} pips\n"
+                                    . "🔄 *Reversal Confirmed!* ({$timeframe} Bar: {$result['bar_datetime']})";
+
+                    try {
+                        Http::post($telegramUrl, [
+                            'chat_id' => $chatId,
+                            'text' => $messageContent,
+                            'parse_mode' => 'Markdown',
+                        ]);
+                        $this->info("Telegram Notification SENT for {$alertModel->pair}.");
+                    } catch (\Exception $e) {
+                        $this->error("Failed to send Telegram for {$alertModel->pair}: " . $e->getMessage());
+                    }
+
+                    // อัปเดต Datetime ของแท่งเทียนที่ถูกแจ้งเตือนล่าสุด เพื่อป้องกันการแจ้งซ้ำ
+                    $alertModel->last_alert_sent_at = $result['bar_datetime']; 
+                }
+                
+                // อัปเดตฐานข้อมูล
+                $alertModel->pips_away = (int) $result['pips_away']; 
                 $alertModel->close_price = $result['close_price']; 
-                
-                // 🚨 NEW: อัปเดตฟิลด์ reversal
                 $alertModel->reversal = $result['reversal_flag']; 
-                
-                // 🚨 หากต้องการเพิ่ม Logic การแจ้งเตือน ให้ทำที่นี่
                 
                 $alertModel->save();
                 $updateCount++;
