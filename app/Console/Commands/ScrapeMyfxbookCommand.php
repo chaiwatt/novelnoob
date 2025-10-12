@@ -148,9 +148,9 @@ class ScrapeMyfxbookCommand extends Command
             // --------------------------------------------------------------------
             // 5. FINISH: แสดงผลสรุปและจบการทำงาน
             // --------------------------------------------------------------------
-            $this->line(''); // Add a blank line for spacing
-            $headers = ['Symbol', 'percentsell', 'percentbuy', 'sell_volume', 'buy_volume', 'pending buy', 'pending sell'];
-            $this->table($headers, $resultsForTable);
+            // $this->line(''); 
+            // $headers = ['Symbol', 'percentsell', 'percentbuy', 'sell_volume', 'buy_volume', 'pending buy', 'pending sell'];
+            // $this->table($headers, $resultsForTable);
             $this->info("💾 Scraping and database update completed successfully for " . count($resultsForTable) . " symbols.");
             return 0;
 
