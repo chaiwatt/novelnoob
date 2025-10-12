@@ -11,4 +11,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:forex-price-alert-command')
     ->hourly();
+
+Schedule::command('app:scrape-myfxbook-command')
+    ->everyFifteenMinutes();
     // ->everyFiveMinutes();
