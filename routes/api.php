@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MyFxbookController;
 use App\Http\Controllers\ForexPriceAlertController;
 use App\Http\Controllers\NovelGenerationController;
 
