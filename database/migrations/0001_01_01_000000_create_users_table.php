@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('type')->default('writer'); // กำหนดค่าเริ่มต้นเป็น 'writer'
+            $table->unsignedBigInteger('credits')->default(0);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

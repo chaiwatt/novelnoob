@@ -138,14 +138,15 @@
             <h1>เข้าสู่ระบบ</h1>
             <p>ยินดีต้อนรับกลับสู่ Novel Noob</p>
         </div>
-        <form>
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
             <div class="form-group">
                 <label for="email">อีเมล</label>
-                <input type="email" id="email" class="form-input" required>
+                <input type="email" id="email" name="email" class="form-input" required>
             </div>
             <div class="form-group">
                 <label for="password">รหัสผ่าน</label>
-                <input type="password" id="password" class="form-input password-input" required>
+                <input type="password" id="password" name="password" class="form-input password-input" required>
                 <button type="button" class="toggle-password" id="toggle-password">
                     <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />

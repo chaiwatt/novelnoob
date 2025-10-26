@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>แดชบอร์ด | เขียนนิยายด้วย AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -490,10 +491,10 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 <span>แดชบอร์ด</span>
             </a>
-            <a class="nav-item" data-page="ebook-library">
+            {{-- <a class="nav-item" data-page="ebook-library">
                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18"></path><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path></svg>
                 <span>นิยายของฉัน</span>
-            </a>
+            </a> --}}
             <a class="nav-item" data-page="billing">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 <span>เครดิต</span>
@@ -510,6 +511,16 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                 <span>Affiliate</span>
             </a>
+            <a class="nav-item" data-page="logout"
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style="margin-right: 8px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3v-3m3-12h10a3 3 0 013 3v3"></path>
+                </svg>
+                <span>ออกจากระบบ</span>
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </nav>
         <div class="sidebar-footer">
             <div class="user-profile">
@@ -540,21 +551,21 @@
                     <div class="stat-card">
                         <div class="stat-icon" style="color: var(--primary-accent);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg></div>
                         <div class="stat-info">
-                            <div class="value">1,250</div>
+                            <div class="value">{{ number_format(Auth::user()->credits ?? 0) }}</div>
                             <div class="label">เครดิตคงเหลือ</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="color: var(--status-completed);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18"></path><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path></svg></div>
                         <div class="stat-info">
-                            <div class="value">2</div>
+                            <div class="value">{{ $finishedCount }}</div>
                             <div class="label">เขียนเสร็จ</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="color: var(--warning-color);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></div>
                         <div class="stat-info">
-                            <div class="value">1</div>
+                            <div class="value">{{ $inProgressCount }}</div>
                             <div class="label">กำลังเขียน</div>
                         </div>
                     </div>
@@ -566,30 +577,40 @@
                         <a href="#" class="btn btn-secondary" onclick="document.querySelector('.nav-item[data-page=\'ebook-library\']').click()">ดูทั้งหมด</a>
                     </div>
                     <div class="ebook-list">
-                         <div class="ebook-item">
-                            <div class="ebook-details">
-                                <h4>ปริศนาแห่งเซ็นทินัล</h4>
-                                <p>แนวสืบสวนสอบสวน • สร้างเมื่อ: 29 ส.ค. 2568</p>
+                        @forelse ($novels as $novel) <div class="ebook-item">
+                                <div class="ebook-details">
+                                    <h4>{{ $novel->title }}</h4>
+                                    <p>
+                                        {{ $novel->styleName }} • 
+                                        สร้างเมื่อ: {{ $novel->created_at->locale('th')->isoFormat('D MMMM Y') }}
+                                    </p>
+                                </div>
+                                <div class="ebook-actions">
+                                    @if (!$novel->isFinished)
+                                        <a href="{{ route('novel.edit', $novel) }}" class="btn btn-secondary">เขียนต่อ</a>
+                                    @endif
+                                    {{-- <a href="#" class="btn btn-secondary">จัดการนิยาย</a> --}}
+                                    <button class="btn btn-secondary download-novel-btn" data-novel-id="{{ $novel->id }}" data-novel-title="{{ $novel->title }}">
+                                        <span>ดาวน์โหลด</span>
+                                        <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px; margin-left: 5px; border-color: currentColor; border-right-color: transparent;"></div>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="ebook-actions">
-                                <button class="btn btn-secondary">ดาวน์โหลด</button>
+                        @empty
+                            <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
+                                <p>คุณยังไม่มีนิยาย</p>
+                                <a href="{{route('novel.create')}}" class="btn btn-primary" style="margin-top: 10px;">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    <span>เริ่มสร้างเรื่องแรกของคุณ</span>
+                                </a>
                             </div>
-                        </div>
-                        <div class="ebook-item">
-                            <div class="ebook-details">
-                                <h4>บันทึกรักข้ามภพ</h4>
-                                <p>แนวโรแมนติก • สร้างเมื่อ: 15 ก.ค. 2568</p>
-                            </div>
-                            <div class="ebook-actions">
-                                <button class="btn btn-secondary">ดาวน์โหลด</button>
-                            </div>
-                        </div>
+                        @endforelse
                     </div>
                 </div>
 
             </div>
 
-            <div id="ebook-library" class="page">
+            {{-- <div id="ebook-library" class="page">
                 <header class="main-header">
                     <div class="header-left">
                          <button class="sidebar-toggle-btn" id="sidebar-toggle-btn-library">
@@ -602,7 +623,7 @@
                      <div class="ebook-list" id="full-ebook-list">
                         </div>
                 </div>
-            </div>
+            </div> --}}
 
             <div id="billing" class="page">
                 <header class="main-header">
@@ -616,57 +637,99 @@
                 <div class="card">
                     <div class="credit-balance">
                         <p>เครดิตคงเหลือ</p>
-                        <div class="balance">1,250</div>
+                        <!-- 💡 คุณต้องส่งตัวแปร $user_credits มาจาก Controller เพื่อแสดงยอดคงเหลือจริง -->
+                        <div class="balance" id="credit-balance-display">{{ number_format(Auth::user()->credits ?? 0) }}</div>
                     </div>
                     <div class="card-header" style="border-top: 1px solid var(--border-color); padding-top: 20px;">
                         <h3>ซื้อเครดิตเพิ่ม</h3>
                     </div>
                     <div class="credit-packages">
-                        <div class="package-card">
-                            <div class="credits">900 เครดิต</div>
-                            <p class="price">300 บาท</p>
-                            <button class="btn btn-primary">ซื้อแพ็กเกจ</button>
-                        </div>
-                        <div class="package-card">
-                             <div class="ribbon"><span>คุ้มค่า</span></div>
-                            <div class="credits">1,600 เครดิต</div>
-                            <p class="price">500 บาท</p>
-                            <button class="btn btn-primary">ซื้อแพ็กเกจ</button>
-                        </div>
-                         <div class="package-card">
-                            <div class="credits">3,500 เครดิต</div>
-                            <p class="price">1,000 บาท</p>
-                            <button class="btn btn-primary">ซื้อแพ็กเกจ</button>
-                        </div>
+                        
+                        <!-- 1. เริ่ม Loop $packages -->
+                        @forelse ($packages as $package)
+                            <div class="package-card">
+                                
+                                <!-- 2. ตรวจสอบว่าต้องแสดงริบบิ้น "คุ้มค่า" หรือไม่ -->
+                                @if ($package->is_highlighted)
+                                    <div class="ribbon"><span>คุ้มค่า</span></div>
+                                @endif
+                                
+                                <!-- 3. แสดงข้อมูลจาก $package -->
+                                <div class="credits">{{ number_format($package->credits) }} เครดิต</div>
+                                <p class="price">{{ number_format($package->price) }} บาท</p>
+                                
+   
+                                 <button type="button" class="btn btn-primary purchase-btn" data-package-id="{{ $package->id }}">
+                                    <span>ซื้อแพ็กเกจ</span>
+                                    <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px;"></div>
+                                </button>
+
+                            </div>
+                        @empty
+                            <p style="color: var(--text-secondary); text-align: center; width: 100%;">
+                                ขออภัย, ขณะนี้ไม่มีแพ็กเกจเครดิตให้บริการ
+                            </p>
+                        @endforelse
+                        <!-- จบ Loop -->
+                        
                     </div>
                 </div>
-                 <div class="card">
+                <div class="card">
                     <div class="card-header">
                         <h3>ประวัติการทำรายการ</h3>
                     </div>
                     <div class="table-wrapper">
-                         <table class="custom-table">
+                        <table class="custom-table">
                             <thead>
                                 <tr>
                                     <th>วันที่</th>
                                     <th>รายการ</th>
+                                    <th>จำนวนเครดิต</th>
                                     <th>จำนวนเงิน</th>
                                     <th>สถานะ</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>20 ส.ค. 2568</td>
-                                    <td>ซื้อแพ็กเกจ 12,000 เครดิต</td>
-                                    <td>฿ 599</td>
-                                    <td><span class="status-tag success">สำเร็จ</span></td>
-                                </tr>
-                                 <tr>
-                                    <td>10 มิ.ย. 2568</td>
-                                    <td>ซื้อแพ็กเกจ 5,000 เครดิต</td>
-                                    <td>฿ 299</td>
-                                    <td><span class="status-tag success">สำเร็จ</span></td>
-                                </tr>
+                                @forelse ($transactions as $transaction)
+                                    <tr>
+                                        <td>{{ $transaction->created_at->locale('th')->isoFormat('D MMM YYYY') }}</td>
+                                        <td>
+                                            ซื้อแพ็กเกจ
+                                            {{-- Assuming you eager loaded creditPackage --}}
+                                            @if($transaction->creditPackage)
+                                                {{ number_format($transaction->creditPackage->credits) }} เครดิต
+                                            @else
+                                                (แพ็กเกจถูกลบ)
+                                            @endif
+                                        </td>
+                                        <td>{{ number_format($transaction->credits_added) }}</td>
+                                        <td>{{ number_format($transaction->amount_paid, 2) }} บาท</td>
+                                        <td>
+                                            {{-- Map status to Thai words and CSS classes --}}
+                                            @php
+                                                $statusClass = 'default'; // Default class
+                                                $statusText = $transaction->status; // Default text is the status itself
+                                                if ($transaction->status === 'completed') {
+                                                    $statusClass = 'success';
+                                                    $statusText = 'สำเร็จ';
+                                                } elseif ($transaction->status === 'pending') {
+                                                    $statusClass = 'warning';
+                                                    $statusText = 'รอตรวจสอบ';
+                                                } elseif ($transaction->status === 'failed') {
+                                                    $statusClass = 'danger';
+                                                    $statusText = 'ล้มเหลว';
+                                                }
+                                            @endphp
+                                            <span class="status-tag {{ $statusClass }}">{{ $statusText }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                                            ยังไม่มีประวัติการทำรายการ
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -878,64 +941,272 @@
 <div class="overlay" id="overlay"></div>
 <div class="notification" id="notification">ส่งรีวิวของคุณเรียบร้อยแล้ว!</div>
 
+<div id="alert-message" style="position: fixed; top: 20px; right: 20px; z-index: 1050; display: none; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+</div>
+
 <!-- Central Script -->
 <script src="{{asset('assets/js/script.js')}}"></script>
 
 <!-- Page-specific script -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const navItems = document.querySelectorAll('.nav-item');
-    const pages = document.querySelectorAll('.page');
+    document.addEventListener('DOMContentLoaded', () => {
+        const creditBalanceDisplay = document.getElementById('credit-balance-display');
+        const alertMessageDiv = document.getElementById('alert-message');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    // --- Responsive Sidebar Logic ---
-    const sidebar = document.querySelector('.sidebar');
-    const toggleButtons = document.querySelectorAll('.sidebar-toggle-btn');
-    const closeBtn = document.getElementById('sidebar-close-btn');
-    const overlay = document.getElementById('overlay');
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
 
-    const openSidebar = () => {
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-    };
+        // --- Responsive Sidebar Logic ---
+        const sidebar = document.querySelector('.sidebar');
+        const toggleButtons = document.querySelectorAll('.sidebar-toggle-btn');
+        const closeBtn = document.getElementById('sidebar-close-btn');
+        const overlay = document.getElementById('overlay');
+
+        const openSidebar = () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        };
     
-    const closeSidebar = () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-    };
+        const closeSidebar = () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        };
 
-    toggleButtons.forEach(btn => btn.addEventListener('click', openSidebar));
-    closeBtn.addEventListener('click', closeSidebar);
-    overlay.addEventListener('click', closeSidebar);
+        toggleButtons.forEach(btn => btn.addEventListener('click', openSidebar));
+        closeBtn.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
 
 
-    // --- Mock Data ---
-    const mockEbooks = [
-        { title: "ปริศนาแห่งเซ็นทินัล", genre: "แนวสืบสวนสอบสวน", date: "29 ส.ค. 2568" },
-        { title: "บันทึกรักข้ามภพ", genre: "แนวโรแมนติก", date: "15 ก.ค. 2568" },
-        { title: "สงครามดวงดาวไร้สิ้นสุด", genre: "แนววิทยาศาสตร์", date: "01 พ.ค. 2568" },
-    ];
+        // --- Mock Data ---
+        // const mockEbooks = [
+        //     { title: "ปริศนาแห่งเซ็นทินัล", genre: "แนวสืบสวนสอบสวน", date: "29 ส.ค. 2568" },
+        //     { title: "บันทึกรักข้ามภพ", genre: "แนวโรแมนติก", date: "15 ก.ค. 2568" },
+        //     { title: "สงครามดวงดาวไร้สิ้นสุด", genre: "แนววิทยาศาสตร์", date: "01 พ.ค. 2568" },
+        // ];
 
-    function populateEbookLibrary() {
-        const libraryContainer = document.getElementById('full-ebook-list');
-        if (!libraryContainer) return;
+        document.querySelectorAll('.download-novel-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const btn = e.currentTarget;
+                const novelId = btn.dataset.novelId;
+                const novelTitle = btn.dataset.novelTitle || 'novel';
+                const loader = btn.querySelector('.loader');
+                const span = btn.querySelector('span');
 
-        libraryContainer.innerHTML = '';
-        mockEbooks.forEach(ebook => {
-            const ebookElement = document.createElement('div');
-            ebookElement.className = 'ebook-item';
-            ebookElement.innerHTML = `
-                <div class="ebook-details">
-                    <h4>${ebook.title}</h4>
-                    <p>${ebook.genre} • สร้างเมื่อ: ${ebook.date}</p>
-                </div>
-                <div class="ebook-actions">
-                    <button class="btn btn-secondary">ดาวน์โหลด</button>
-                    <button class="btn btn-danger">ลบ</button>
-                </div>
-            `;
-            libraryContainer.appendChild(ebookElement);
+
+                btn.disabled = true;
+                loader.style.display = 'inline-block';
+                span.style.display = 'none';
+
+                try {
+                    const response = await fetch(`/novel/${novelId}/download`, {
+                        headers: {
+                            'Accept': 'text/plain',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json(); // สมมติว่า server ส่ง JSON error
+                        throw new Error(errorData.error || `Error ${response.status}`);
+                    }
+
+                    // ดึงเนื้อหา Text จาก response
+                    const textContent = await response.text();
+                    
+                    // สร้าง Blob
+                    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+
+                    // สร้าง Link ชั่วคราวเพื่อดาวน์โหลด
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${novelTitle.replace(/ /g, '_')}.txt`; // สร้างชื่อไฟล์
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // ลบ Link ชั่วคราว
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(a.href);
+
+                } catch (error) {
+                    console.error('Download failed:', error);
+                    alert('ดาวน์โหลดไม่สำเร็จ: ' + error.message);
+                } finally {
+                    // คืนค่าปุ่มกลับเหมือนเดิม
+                    btn.disabled = false;
+                    loader.style.display = 'none';
+                    span.style.display = 'inline';
+                }
+            });
         });
+
+        
+    async function handleFetchError(response, contextMessage = 'เกิดข้อผิดพลาด') {
+        const status = response.status;
+        let errorData = {};
+        let errorMessage = `เกิดข้อผิดพลาด (${status})`;
+        try {
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } else { errorMessage = (await response.text()) || errorMessage; }
+        } catch (e) { console.error(`Failed to parse error body for ${contextMessage}:`, e); }
+
+        console.error(`${contextMessage} (${status}):`, errorData.details || errorData.errors || errorData || errorMessage);
+
+        let alertMsg = errorMessage;
+        if (errorData.errors) alertMsg += "\n- " + Object.values(errorData.errors).flat().join("\n- ");
+        else if (errorData.details && typeof errorData.details === 'object') try { alertMsg += ` (${JSON.stringify(errorData.details)})`; } catch (e) {}
+        else if (errorData.details) alertMsg += ` (${errorData.details})`;
+
+        alert(alertMsg, 'error');
+
+        if ((status === 401 || status === 403) && errorData.redirect_to) {
+            window.location.href = errorData.redirect_to;
+            throw new Error("Redirecting due to authorization error.");
+        }
+        const error = new Error(errorMessage);
+        error.status = status; error.data = errorData;
+        throw error;
     }
+        // --- Purchase Button Logic (เฉพาะส่วนนี้) ---
+    document.querySelectorAll('.purchase-btn').forEach(button => {
+        button.addEventListener('click', async function() { // Use async
+            const packageId = this.dataset.packageId;
+            const buttonSpan = this.querySelector('span');
+            const buttonLoader = this.querySelector('.loader');
+            const creditBalanceDisplay = document.getElementById('credit-balance-display'); // Get balance display element
+            const alertMessageDiv = document.getElementById('alert-message'); // Get alert element
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            // --- Helper: Show Alert ---
+            function showAlert(message, type = 'info') {
+                if (!alertMessageDiv) return;
+                alertMessageDiv.textContent = message;
+                alertMessageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
+                alertMessageDiv.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
+                alertMessageDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#b8daff'}`;
+                // Ensure other required styles are set for visibility
+                alertMessageDiv.style.position = 'fixed';
+                alertMessageDiv.style.top = '20px';
+                alertMessageDiv.style.right = '20px';
+                alertMessageDiv.style.zIndex = '1050';
+                alertMessageDiv.style.padding = '15px';
+                alertMessageDiv.style.borderRadius = '8px';
+                alertMessageDiv.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                alertMessageDiv.style.display = 'block';
+                setTimeout(hideAlert, 5000); // Auto-hide after 5 seconds
+            }
+
+            // --- Helper: Hide Alert ---
+            function hideAlert() {
+                if (alertMessageDiv) alertMessageDiv.style.display = 'none';
+            }
+
+            // --- Helper: Format Number ---
+            function formatNumber(num) {
+                try { return new Intl.NumberFormat('th-TH').format(num); }
+                catch (e) { return String(num); } // Fallback
+            }
+
+            // --- Helper: Handle Fetch Errors ---
+            async function handleFetchError(response, contextMessage = 'เกิดข้อผิดพลาด') {
+                const status = response.status;
+                let errorData = {};
+                let errorMessage = `เกิดข้อผิดพลาด (${status})`;
+                try {
+                    if (response.headers.get('content-type')?.includes('application/json')) {
+                        errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    } else { errorMessage = (await response.text()) || errorMessage; }
+                } catch (e) { console.error(`Failed to parse error body for ${contextMessage}:`, e); }
+
+                console.error(`${contextMessage} (${status}):`, errorData.details || errorData.errors || errorData || errorMessage);
+
+                let alertMsg = errorMessage;
+                if (errorData.errors) alertMsg += "\n- " + Object.values(errorData.errors).flat().join("\n- ");
+                else if (errorData.details && typeof errorData.details === 'object') try { alertMsg += ` (${JSON.stringify(errorData.details)})`; } catch (e) {}
+                else if (errorData.details) alertMsg += ` (${errorData.details})`;
+
+                showAlert(alertMsg, 'error'); // Use showAlert helper
+
+                if ((status === 401 || status === 403) && errorData.redirect_to) {
+                    window.location.href = errorData.redirect_to;
+                    throw new Error("Redirecting due to authorization error.");
+                }
+                const error = new Error(errorMessage);
+                error.status = status; error.data = errorData;
+                throw error;
+            }
+            // --- End Helpers ---
+
+            if (!packageId || this.disabled) return;
+
+            this.disabled = true;
+            if (buttonSpan) buttonSpan.style.display = 'none';
+            if (buttonLoader) buttonLoader.style.display = 'inline-block';
+            hideAlert(); // Hide previous alerts
+
+            try {
+                const response = await fetch('{{ route("credits.purchase") }}', { // Ensure this route name is correct
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken ?? ''
+                    },
+                    body: JSON.stringify({ package_id: packageId })
+                });
+
+                if (!response.ok) await handleFetchError(response, 'เกิดข้อผิดพลาดในการซื้อเครดิต'); // handleFetchError throws on error
+
+                const data = await response.json();
+               
+                if (data.status === 'success') {
+                     console.log(data)
+                    showAlert(`สำเร็จ! ได้รับ ${formatNumber(data.credits_added || 0)} เครดิต ยอดคงเหลือใหม่ ${data.new_balance !== undefined ? formatNumber(data.new_balance) : 'N/A'}`, 'success');
+                    if (creditBalanceDisplay && data.new_balance !== undefined) {
+                        creditBalanceDisplay.textContent = formatNumber(data.new_balance); // Update balance display
+                    }
+                    // Potentially update transaction history if displayed dynamically
+                } else {
+                    // This case might be redundant if handleFetchError catches all non-ok responses
+                    showAlert(data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ', 'error');
+                }
+            } catch (error) {
+                if (error.message !== "Redirecting due to authorization error.") {
+                    console.error('Purchase Error caught:', error);
+                    // Alert is likely already handled by handleFetchError
+                }
+            } finally {
+                this.disabled = false;
+                if (buttonSpan) buttonSpan.style.display = 'inline-block';
+                if (buttonLoader) buttonLoader.style.display = 'none';
+            }
+        });
+    });
+
+    // function populateEbookLibrary() {
+    //     const libraryContainer = document.getElementById('full-ebook-list');
+    //     if (!libraryContainer) return;
+
+    //     libraryContainer.innerHTML = '';
+    //     mockEbooks.forEach(ebook => {
+    //         const ebookElement = document.createElement('div');
+    //         ebookElement.className = 'ebook-item';
+    //         ebookElement.innerHTML = `
+    //             <div class="ebook-details">
+    //                 <h4>${ebook.title}</h4>
+    //                 <p>${ebook.genre} • สร้างเมื่อ: ${ebook.date}</p>
+    //             </div>
+    //             <div class="ebook-actions">
+    //                 <button class="btn btn-secondary">ดาวน์โหลด</button>
+    //                 <button class="btn btn-danger">ลบ</button>
+    //             </div>
+    //         `;
+    //         libraryContainer.appendChild(ebookElement);
+    //     });
+    // }
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -1035,7 +1306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    populateEbookLibrary();
+    // populateEbookLibrary();
     updatePreview();
 });
 </script>

@@ -448,7 +448,7 @@
     <header class="navbar">
         <div class="container">
             <nav class="navbar">
-                <a href="#" class="logo">NovelNoob</a>
+                <a href="{{ url('/') }}" class="logo">NovelNoob</a>
                 
                 <div class="nav-links">
                     <a href="#features">คุณสมบัติ</a>
@@ -457,9 +457,36 @@
                     <a href="{{route('articles.index')}}">บทความ</a>
                     <a href="{{route('community.index')}}">ชุมชน</a>
                 </div>
+
                 <div class="nav-actions">
-                    <a href="{{route('login')}}" class="btn btn-secondary">เข้าสู่ระบบ</a>
-                    <a href="{{route('novel.create')}}" class="btn btn-primary">ฟรี 100 เครดิต</a>
+                    {{-- ⭐️ ตรวจสอบ: ถ้าผู้ใช้ยังไม่ได้ล็อกอิน (@guest) ⭐️ --}}
+                    @guest
+                        <a href="{{route('login')}}" class="btn btn-secondary">เข้าสู่ระบบ</a>
+                        <a href="{{route('novel.create')}}" class="btn btn-primary">ฟรี 100 เครดิต</a>
+                    @endguest
+
+                    {{-- ⭐️ ตรวจสอบ: ถ้าผู้ใช้ล็อกอินแล้ว (@auth) ⭐️ --}}
+                    @auth
+                        {{-- กำหนดเส้นทาง Dashboard ตามประเภทผู้ใช้ (Admin หรือ Writer) --}}
+                        @if (Auth::user()->type === 'admin')
+                            {{-- ถ้าเป็น Admin ให้ไปที่ Admin Dashboard --}}
+                            <a href="{{ route('admin.dashboard.index') }}" class="btn btn-secondary">แดชบอร์ด</a>
+                        @elseif (Auth::user()->type === 'writer')
+                            {{-- ถ้าเป็น Writer ให้ไปที่ Writer Dashboard --}}
+                            <a href="{{ route('dashboard.index') }}" class="btn btn-secondary">แดชบอร์ด</a>
+                        @endif
+                        
+                        {{-- ปุ่ม Logout (ต้องมีฟอร์ม POST ซ่อนอยู่) --}}
+                        <a href="#" class="btn btn-primary" 
+                        onclick="event.preventDefault(); document.getElementById('logout-form-nav').submit();">
+                            ออกจากระบบ
+                        </a>
+                        
+                        {{-- ฟอร์ม Logout ที่ซ่อนอยู่ --}}
+                        <form id="logout-form-nav" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
+                    @endauth
                 </div>
 
                 <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Open menu">

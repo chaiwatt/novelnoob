@@ -7,13 +7,69 @@ use Throwable;
 use App\Models\Novel;
 use App\Models\NovelChapter;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class NovelGenerationController extends Controller
 {
-        /**
+    private const PLOT_COST = 5;
+    private const OUTLINE_COST = 25;
+    private const CHAPTER_COST = 10;
+
+    /**
+     * Helper method to check user type and redirect if not 'writer'.
+     *
+     * @return \Illuminate\Http\RedirectResponse|null
+     */
+    private function checkUserAccessForApi(): ?JsonResponse
+    {
+        // dd(Auth::user());
+        // 1. ตรวจสอบว่าผู้ใช้ล็อกอินหรือไม่
+        if (!Auth::check()) {
+            // ถ้าไม่ได้ล็อกอิน: ส่ง 401 Unauthorized กลับไป
+            return response()->json([
+                'error' => 'UNAUTHENTICATED',
+                'message' => 'คุณต้องล็อกอินเพื่อเข้าถึงฟังก์ชันนี้',
+                'redirect_to' => route('login') // ส่ง URL กลับไปให้ JS Redirect เอง
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        // 2. ตรวจสอบประเภทผู้ใช้ (อนุญาตเฉพาะ 'writer')
+        if ($user->type !== 'writer') {
+            
+            $redirectRoute = ($user->type === 'admin') 
+                             ? route('admin.dashboard') 
+                             : route('dashboard.index'); // หรือ '/'
+
+            // ถ้าล็อกอินแล้วแต่ไม่ใช่ 'writer': ส่ง 403 Forbidden กลับไป
+            return response()->json([
+                'error' => 'FORBIDDEN_ROLE',
+                'message' => 'บัญชีของคุณไม่มีสิทธิ์ในการสร้างนิยาย',
+                'redirect_to' => $redirectRoute // ส่ง URL Redirect ตาม role กลับไป
+            ], 403);
+        }
+
+        // ถ้าเป็น writer ให้ส่งค่า null กลับไป เพื่อให้เมธอดหลักทำงานต่อ
+        return null;
+    }
+
+    private function checkCredits(int $cost): ?JsonResponse
+    {
+        $user = Auth::user();
+        if ($user->credits < $cost) {
+            return response()->json([
+                'error' => 'INSUFFICIENT_CREDITS',
+                'message' => "เครดิตไม่เพียงพอ (ต้องการ {$cost} เครดิต, คุณมี {$user->credits} เครดิต)",
+                // อาจเพิ่ม redirect_to หน้าเติมเงิน
+            ], 402); // 402 Payment Required
+        }
+        return null;
+    }
+    /**
      * Generate a novel plot based on user input.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -21,6 +77,17 @@ class NovelGenerationController extends Controller
      */
     public function generatePlot(Request $request)
     {
+        
+        // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
+        $errorResponse = $this->checkUserAccessForApi();
+
+        $creditError = $this->checkCredits(self::PLOT_COST);
+        if ($creditError) return $creditError;
+
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
         set_time_limit(300);
         // 1. ตรวจสอบข้อมูลที่ส่งมา (เหมือนเดิม)
         $validator = Validator::make($request->all(), [
@@ -34,7 +101,21 @@ class NovelGenerationController extends Controller
         }
 
         // 2. ดึงข้อมูลและ API Key
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKeysString = env('GEMINI_API_KEY');
+
+        if (!$apiKeysString) {
+            // กรณีไม่มีการกำหนดค่า API Key เลย
+            return response()->json(['error' => 'Gemini API key is not configured.'], 500);
+        }
+
+        // แยกสตริงที่คั่นด้วยคอมมาออกเป็นอาเรย์ของคีย์
+        $apiKeys = explode(',', $apiKeysString);
+
+        // กรองเพื่อลบช่องว่างที่อาจมีจากการแยก (trim) และลบคีย์ที่ว่างเปล่า
+        $apiKeys = array_map('trim', $apiKeys);
+        $apiKeys = array_filter($apiKeys);
+        $apiKey = $apiKeys[array_rand($apiKeys)];
+
         if (!$apiKey) {
             return response()->json(['error' => 'Gemini API key is not configured.'], 500);
         }
@@ -70,18 +151,20 @@ class NovelGenerationController extends Controller
                 $generatedPlot = $response->json('candidates.0.content.parts.0.text');
 
                 if ($generatedPlot) {
+                    Auth::user()->decrement('credits', self::PLOT_COST);
                     return response()->json([
                         'status' => 'success',
                         'plot' => $generatedPlot,
+                        'credits_remaining' => Auth::user()->fresh()->credits
                     ]);
                 } else {
                     // กรณีที่โครงสร้าง response ไม่ถูกต้อง
-                    return response()->json(['error' => 'Failed to parse Gemini API response.'], 500);
+                    return response()->json(['error' => 'Failed to parse Gemini API response. '], 500);
                 }
             } else {
                 // กรณีที่ API trả về lỗi (เช่น 400, 500)
                 return response()->json([
-                    'error' => 'Error from Gemini API.',
+                    'error' => 'Error from Gemini API. ',
                     'details' => $response->json() // ส่งรายละเอียด error กลับไปด้วย
                 ], $response->status());
             }
@@ -133,6 +216,17 @@ class NovelGenerationController extends Controller
      */
     public function generateOutline(Request $request)
     {
+        
+        // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
+        $errorResponse = $this->checkUserAccessForApi();
+
+        $creditError = $this->checkCredits(self::OUTLINE_COST);
+        if ($creditError) return $creditError;
+
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
         set_time_limit(300);
 
         $validator = Validator::make($request->all(), [
@@ -147,7 +241,21 @@ class NovelGenerationController extends Controller
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        $apiKey = env('GEMINI_API_KEY');
+                $apiKeysString = env('GEMINI_API_KEY');
+
+        if (!$apiKeysString) {
+            // กรณีไม่มีการกำหนดค่า API Key เลย
+            return response()->json(['error' => 'Gemini API key is not configured.'], 500);
+        }
+
+        // แยกสตริงที่คั่นด้วยคอมมาออกเป็นอาเรย์ของคีย์
+        $apiKeys = explode(',', $apiKeysString);
+
+        // กรองเพื่อลบช่องว่างที่อาจมีจากการแยก (trim) และลบคีย์ที่ว่างเปล่า
+        $apiKeys = array_map('trim', $apiKeys);
+        $apiKeys = array_filter($apiKeys);
+        $apiKey = $apiKeys[array_rand($apiKeys)];
+
         if (!$apiKey) {
             return response()->json(['error' => 'Gemini API key is not configured.'], 500);
         }
@@ -228,11 +336,11 @@ class NovelGenerationController extends Controller
             $response = Http::timeout(240)->post($apiUrl, $payload);
 
             if ($response->successful()) {
-                // $responseText = $response->json('candidates.0.content.parts.0.text');
                 $responseText = $this->cleanJsonResponse($response->json('candidates.0.content.parts.0.text'));
                 $outlineData = json_decode($responseText, true);
 
                 if (json_last_error() === JSON_ERROR_NONE) {
+                    Auth::user()->decrement('credits', self::OUTLINE_COST);
                     $novel = Novel::create([
                         'user_id' => Auth::id() ?? 1,
                         'title' => $outlineData['story']['title'] ?? $request->input('title_prompt'),
@@ -258,7 +366,10 @@ class NovelGenerationController extends Controller
                         }
                     }
                     $novel->load('chapters');
-                    return response()->json($novel);
+                    return response()->json([
+                        'novel' => $novel,
+                        'credits_remaining' => Auth::user()->fresh()->credits // ส่งเครดิตล่าสุดกลับไปด้วย
+                    ]);
                 } else {
                     return response()->json(['error' => 'Failed to decode JSON from AI response.', 'raw_response' => $responseText], 500);
                 }
@@ -338,6 +449,16 @@ class NovelGenerationController extends Controller
      */
     public function writeChapter(Request $request, NovelChapter $chapter)
     {
+        // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
+        $errorResponse = $this->checkUserAccessForApi();
+
+        $creditError = $this->checkCredits(self::CHAPTER_COST);
+        if ($creditError) return $creditError;
+
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
         set_time_limit(600);
 
         $novel = $chapter->novel;
@@ -348,8 +469,22 @@ class NovelGenerationController extends Controller
         $writingPrompt = $this->createChapterWritingPrompt($novel, $chapter, $previousChapter);
 
         try {
-            $apiKey = env('GEMINI_API_KEY');
+            $apiKeysString = env('GEMINI_API_KEY');
+
+            if (!$apiKeysString) {
+                // กรณีไม่มีการกำหนดค่า API Key เลย
+                return response()->json(['error' => 'Gemini API key is not configured.'], 500);
+            }
+
+            // แยกสตริงที่คั่นด้วยคอมมาออกเป็นอาเรย์ของคีย์
+            $apiKeys = explode(',', $apiKeysString);
+
+            // กรองเพื่อลบช่องว่างที่อาจมีจากการแยก (trim) และลบคีย์ที่ว่างเปล่า
+            $apiKeys = array_map('trim', $apiKeys);
+            $apiKeys = array_filter($apiKeys);
+            $apiKey = $apiKeys[array_rand($apiKeys)];
             $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+
 
             $writingPayload = ['contents' => [['parts' => [['text' => $writingPrompt]]]]];
             $writingResponse = Http::timeout(300)->post($apiUrl, $writingPayload);
@@ -358,6 +493,8 @@ class NovelGenerationController extends Controller
                 return response()->json(['error' => 'Error from Gemini API during content writing.', 'details' => $writingResponse->json()], $writingResponse->status());
             }
             $generatedContent = $writingResponse->json('candidates.0.content.parts.0.text');
+
+           
 
             $summaryPrompt = $this->createContentSummaryPrompt($generatedContent);
             $summaryPayload = ['contents' => [['parts' => [['text' => $summaryPrompt]]]]];
@@ -375,8 +512,12 @@ class NovelGenerationController extends Controller
                 'ending_summary' => $endingSummary,
                 'status' => 'completed',
             ]);
-
-            return response()->json(['status' => 'success', 'chapter' => $chapter]);
+            Auth::user()->decrement('credits', self::CHAPTER_COST);
+            return response()->json([
+                'status' => 'success', 
+                'chapter' => $chapter,
+                'credits_remaining' => Auth::user()->fresh()->credits
+            ]);
 
         } catch (Throwable $e) {
             report($e);
@@ -494,5 +635,42 @@ class NovelGenerationController extends Controller
             'chapter' => $chapter
         ]);
     }
+
+        public function downloadTxt(Request $request, Novel $novel)
+    {
+        // 1. ตรวจสอบสิทธิ์ (Middleware จัดการ 'auth' and 'writer' แล้ว)
+        // แต่เราต้องตรวจสอบว่า Novel นี้เป็นของ User ที่ login อยู่
+        if ($novel->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Forbidden. You do not own this novel.'], 403);
+        }
+
+        // 2. ดึงเฉพาะบทที่ 'completed'
+        $chapters = $novel->chapters()
+            ->where('status', 'completed')
+            ->orderBy('chapter_number', 'asc')
+            ->get();
+
+        // 3. ตรวจสอบว่ามีบทที่เสร็จแล้วหรือไม่
+        if ($chapters->isEmpty()) {
+            return response()->json(['error' => 'No completed chapters to download.'], 404);
+        }
+
+        // 4. รวบรวมเนื้อหา
+        $fileContent = $novel->title . "\n\n";
+        $fileContent .= "========================================\n\n";
+
+        foreach ($chapters as $chapter) {
+            $fileContent .= "--- บทที่ {$chapter->chapter_number}: {$chapter->title} ---\n\n";
+            $fileContent .= $chapter->content;
+            $fileContent .= "\n\n\n"; // เพิ่มช่องว่าง 3 บรรทัดระหว่างบท
+        }
+
+        // 5. ส่ง Response กลับไปเป็น text/plain
+        // JavaScript (Fetch API) จะรับข้อความนี้ไปสร้างเป็น Blob และไฟล์ .txt
+        return response($fileContent, 200, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+        ]);
+    }
+
 
 }
