@@ -50,6 +50,88 @@
             max-width: 600px;
             margin: 0 auto;
         }
+
+        /* ⭐️ --- (เพิ่ม) Search Bar Styles --- ⭐️ */
+        .search-container {
+            margin-top: 30px; /* Space from the <p> tag */
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-container form {
+            display: flex;
+            position: relative;
+        }
+
+        .search-container input[type="text"] {
+            flex-grow: 1; /* Take up most of the space */
+            width: 100%;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-light); /* Darker background */
+            color: var(--text-primary);
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: var(--font-ui);
+            padding-right: 120px; /* Make space for the button */
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-container input[type="text"]:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.3);
+        }
+
+        .search-container button[type="submit"] {
+            position: absolute;
+            right: 6px; /* Small gap from the edge */
+            top: 50%;
+            transform: translateY(-50%);
+            
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--primary-accent);
+            color: white;
+            font-family: var(--font-ui);
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-container button[type="submit"]:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .search-container button[type="submit"] svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.5;
+        }
+        
+        /* Responsive adjustment for search button */
+        @media (max-width: 480px) {
+            .search-container input[type="text"] {
+                padding-right: 55px; /* Space for icon-only button */
+            }
+            .search-container button[type="submit"] {
+                padding: 10px;
+            }
+            .search-container button[type="submit"] span {
+                display: none; /* Hide text on small screens */
+            }
+            .search-container button[type="submit"] svg {
+                margin-right: 0; /* Remove gap */
+            }
+        }
+        /* ⭐️ --- (จบ) Search Bar Styles --- ⭐️ */
+
         
         /* Article Grid */
         .articles-section {
@@ -135,8 +217,34 @@
                     <!-- Links can be added here if needed -->
                 </div>
                 <div class="nav-actions">
-                    <a href="{{route('login')}}" class="btn btn-secondary">เข้าสู่ระบบ</a>
-                    <a href="{{route('novel.create')}}" class="btn btn-primary">ฟรี 100 เครดิต</a>
+                                        {{-- ⭐️ ตรวจสอบ: ถ้าผู้ใช้ยังไม่ได้ล็อกอิน (@guest) ⭐️ --}}
+                    @guest
+                        <a href="{{route('login')}}" class="btn btn-secondary">เข้าสู่ระบบ</a>
+                        <a href="{{route('novel.create')}}" class="btn btn-primary">ฟรี 100 เครดิต</a>
+                    @endguest
+
+                    {{-- ⭐️ ตรวจสอบ: ถ้าผู้ใช้ล็อกอินแล้ว (@auth) ⭐️ --}}
+                    @auth
+                        {{-- กำหนดเส้นทาง Dashboard ตามประเภทผู้ใช้ (Admin หรือ Writer) --}}
+                        @if (Auth::user()->type === 'admin')
+                            {{-- ถ้าเป็น Admin ให้ไปที่ Admin Dashboard --}}
+                            <a href="{{ route('admin.dashboard.index') }}" class="btn btn-secondary">แดชบอร์ด</a>
+                        @elseif (Auth::user()->type === 'writer')
+                            {{-- ถ้าเป็น Writer ให้ไปที่ Writer Dashboard --}}
+                            <a href="{{ route('dashboard.index') }}" class="btn btn-secondary">แดชบอร์ด</a>
+                        @endif
+                        
+                        {{-- ปุ่ม Logout (ต้องมีฟอร์ม POST ซ่อนอยู่) --}}
+                        <button class="btn btn-primary" 
+                        onclick="event.preventDefault(); document.getElementById('logout-form-nav').submit();">
+                            ออกจากระบบ
+                        </button>
+                        
+                        {{-- ฟอร์ม Logout ที่ซ่อนอยู่ --}}
+                        <form id="logout-form-nav" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
+                    @endauth
                 </div>
                  <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Open menu">
                     <span></span>
@@ -159,6 +267,19 @@
             <div class="container">
                 <h1>บทความและเทคนิคการเขียน</h1>
                 <p>คลังความรู้สำหรับนักเขียนยุคใหม่ ค้นพบเคล็ดลับ เทคนิค และแรงบันดาลใจในการสร้างสรรค์นิยายของคุณ</p>
+                
+                <!-- ⭐️ --- (เพิ่ม) Search Bar HTML --- ⭐️ -->
+                <div class="search-container">
+                    <form action="{{ route('articles.index') }}" method="GET">
+                        <input type="text" name="search" placeholder="ค้นหาบทความ..." value="{{ request('search') }}">
+                        <button type="submit">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <span>ค้นหา</span>
+                        </button>
+                    </form>
+                </div>
+                <!-- ⭐️ --- (จบ) Search Bar HTML --- ⭐️ -->
+
             </div>
         </section>
 

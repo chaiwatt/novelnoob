@@ -34,11 +34,12 @@ class Novel extends Model
      * (เพิ่ม) สร้างค่าคงที่สำหรับ map style key
      * เพื่อให้จัดการได้ง่ายในที่เดียว
      */
-    protected const STYLE_MAP = [
+    public const STYLE_MAP = [
         'style_detective' => 'แนวสืบสวนสอบสวน',
         'style_erotic'    => 'แนวอิโรติก',
         'style_romance'   => 'แนวโรแมนติก',
         'style_sci-fi'    => 'แนววิทยาศาสตร์',
+        'style_drama'    => 'แนวดราม่า',
     ];
 
     /**

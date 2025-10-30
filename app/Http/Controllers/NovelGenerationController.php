@@ -81,12 +81,14 @@ class NovelGenerationController extends Controller
         // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
         $errorResponse = $this->checkUserAccessForApi();
 
-        $creditError = $this->checkCredits(self::PLOT_COST);
-        if ($creditError) return $creditError;
-
         if ($errorResponse) {
             return $errorResponse;
         }
+
+        $creditError = $this->checkCredits(self::PLOT_COST);
+        if ($creditError) return $creditError;
+
+
 
         set_time_limit(300);
         // 1. ตรวจสอบข้อมูลที่ส่งมา (เหมือนเดิม)
@@ -220,12 +222,12 @@ class NovelGenerationController extends Controller
         // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
         $errorResponse = $this->checkUserAccessForApi();
 
-        $creditError = $this->checkCredits(self::OUTLINE_COST);
-        if ($creditError) return $creditError;
-
         if ($errorResponse) {
             return $errorResponse;
         }
+
+        $creditError = $this->checkCredits(self::OUTLINE_COST);
+        if ($creditError) return $creditError;
 
         set_time_limit(300);
 
@@ -452,12 +454,12 @@ class NovelGenerationController extends Controller
         // ⭐️ เรียกใช้ Helper Function เพื่อตรวจสอบสิทธิ์
         $errorResponse = $this->checkUserAccessForApi();
 
-        $creditError = $this->checkCredits(self::CHAPTER_COST);
-        if ($creditError) return $creditError;
-
         if ($errorResponse) {
             return $errorResponse;
         }
+
+        $creditError = $this->checkCredits(self::CHAPTER_COST);
+        if ($creditError) return $creditError;
 
         set_time_limit(600);
 
@@ -492,10 +494,9 @@ class NovelGenerationController extends Controller
             if (!$writingResponse->successful()) {
                 return response()->json(['error' => 'Error from Gemini API during content writing.', 'details' => $writingResponse->json()], $writingResponse->status());
             }
+
             $generatedContent = $writingResponse->json('candidates.0.content.parts.0.text');
-
-           
-
+            // dd($writingResponse, $apiKey);
             $summaryPrompt = $this->createContentSummaryPrompt($generatedContent);
             $summaryPayload = ['contents' => [['parts' => [['text' => $summaryPrompt]]]]];
             $summaryResponse = Http::timeout(300)->post($apiUrl, $summaryPayload);
@@ -555,6 +556,7 @@ class NovelGenerationController extends Controller
                 'style_erotic' => 'แนวอิโรติก',
                 'style_romance' => 'แนวโรแมนติก',
                 'style_sci-fi' => 'แนววิทยาศาสตร์',
+                'style_drama' => 'แนวดราม่า',
             ];
             $genreName = $styleMapping[$novel->style] ?? '';
             

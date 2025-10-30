@@ -16,13 +16,23 @@ class WriterMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // ตรวจสอบว่าผู้ใช้ล็อกอินแล้วและเป็น 'writer' หรือไม่
-        if (Auth::check() && Auth::user()->type === 'writer') {
+        // ตรวจสอบว่าผู้ใช้ล็อกอิน, เป็น 'writer', และมี status เป็น 1 (Active)
+        if (Auth::check() &&
+            Auth::user()->type === 'writer' &&
+            Auth::user()->status == 1) { // ⭐️ (เพิ่มเงื่อนไขนี้)
+            
             return $next($request);
         }
 
-        // ถ้าไม่ใช่ writer (หรือไม่ได้ล็อกอิน) ให้ Redirect ไปที่หน้า Home หรือแสดงข้อผิดพลาด
-        // *หมายเหตุ: หากคุณมี middleware 'auth' ครอบไว้อยู่แล้ว การตรวจสอบ Auth::check() อาจไม่จำเป็น*
+        // --- (แนะนำ) เพิ่มการตรวจสอบสำหรับ Writer ที่ถูกแบน (status != 1) ---
+        // ถ้าเป็น Writer แต่ status ไม่ใช่ 1 (เช่น โดนแบนเป็น 2)
+        // ให้ Logout ออกจากระบบและแจ้งเตือน
+        if (Auth::check() && Auth::user()->type === 'writer' && Auth::user()->status != 1) {
+            Auth::logout();
+            return redirect('/login')->with('error', 'บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแล');
+        }
+
+        // ถ้าไม่ใช่ writer (หรือไม่ได้ล็อกอิน) ให้ Redirect ไปที่หน้า Home
         return redirect('/')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงแดชบอร์ดนี้');
     }
 }

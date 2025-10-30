@@ -282,6 +282,7 @@
                             <option value="style_erotic">แนวอิโรติก</option>
                             <option value="style_romance">แนวโรแมนติก</option>
                             <option value="style_sci-fi">แนววิทยาศาสตร์</option>
+                            <option value="style_drama">แนวดราม่า</option>
                         </select>
                     </div>
                      <div class="form-group">

@@ -477,10 +477,10 @@
                         @endif
                         
                         {{-- ปุ่ม Logout (ต้องมีฟอร์ม POST ซ่อนอยู่) --}}
-                        <a href="#" class="btn btn-primary" 
+                        <button class="btn btn-primary" 
                         onclick="event.preventDefault(); document.getElementById('logout-form-nav').submit();">
                             ออกจากระบบ
-                        </a>
+                        </button>
                         
                         {{-- ฟอร์ม Logout ที่ซ่อนอยู่ --}}
                         <form id="logout-form-nav" action="{{ route('logout') }}" method="POST" style="display: none;">

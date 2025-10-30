@@ -19,6 +19,10 @@ return new class extends Migration
             $table->unsignedBigInteger('credits')->default(0);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('pen_name')->nullable();
+            $table->string('avatar_url')->nullable();
+            $table->char('status')->default(1);
+            $table->uuid('affiliate')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             ForexPriceAlertSeeder::class,
             UserSeeder::class,
             TwelvedataApiSeeder::class,
-            CreditPackageSeeder::class
+            CreditPackageSeeder::class,
+            CommunitySeeder::class,
 
         ]);
 

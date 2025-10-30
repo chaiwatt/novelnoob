@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\WriterMiddleware;
+use App\Http\Middleware\StoreAffiliateRef;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,   // Alias 'admin'
             'writer' => WriterMiddleware::class, // Alias 'writer'
+            'store.ref' => StoreAffiliateRef::class,
+        ]);
+        $middleware->web(append: [
+            StoreAffiliateRef::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

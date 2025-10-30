@@ -223,37 +223,34 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 25px;
-        } /* ⭐️ (FIX) ปิดวงเล็บที่นี่ */
-
-        /* ⭐️ CSS สำหรับ Alert Box (ย้ายมาไว้ตำแหน่งที่ถูกต้อง) ⭐️ */
-        .alert-box {
-            display: none;
-            position: relative;
-            margin-bottom: 20px;
-            padding: 15px;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: var(--text-secondary);
+        }
+        .form-input {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 500;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 1rem;
         }
-        .alert-box.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-box.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .alert-box.info {
-            background-color: #cce5ff;
-            color: #004085;
-            border: 1px solid #b8daff;
+        .form-actions {
+            margin-top: 20px;
+            text-align: right;
         }
 
 
         /* --- Table styles --- */
-        /* (โค้ด CSS เดิมของคุณกลับมาทำงานได้เพราะ Error ถูกแก้แล้ว) */
         .table-controls {
             display: flex;
             justify-content: space-between;
@@ -279,34 +276,6 @@
             height: 20px;
             color: var(--text-secondary);
         }
-         
-        /* (CSS เดิมของคุณ) */
-        .form-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            font-weight: bold;
-            color: var(--text-secondary);
-        }
-        /* (CSS Input ของคุณ) */
-        .form-input {
-            width: 100%;
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 15px;
-            color: var(--text-primary);
-            font-family: var(--font-ui);
-            font-size: 1rem;
-        }
-        .form-actions {
-            margin-top: 20px;
-            text-align: right;
-        }
-
         .table-wrapper { overflow-x: auto; }
         .custom-table { width: 100%; border-collapse: collapse; }
         .custom-table th, .custom-table td {
@@ -472,26 +441,19 @@
             <button class="sidebar-close-btn" id="sidebar-close-btn">&times;</button>
         </div>
         <nav class="sidebar-nav">
-            <a class="nav-item active" data-page="dashboard" href="#">
+            <a class="nav-item active" data-page="dashboard">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M16 8l-6 6-4-4"></path></svg>
                 <span>ภาพรวม</span>
             </a>
-            <a class="nav-item" data-page="users" href="#">
+            <a class="nav-item" data-page="users">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a4 4 0 00-4-4h4a4 4 0 004-4v-1.293a1 1 0 00-1-1h-1a1 1 0 00-1 1V15a4 4 0 00-4 4v1zm0 0a9 9 0 006-6h-4a3 3 0 01-3-3V9a3 3 0 01-3-3H9a3 3 0 01-3 3v4.5"></path></svg>
                 <span>จัดการผู้ใช้</span>
             </a>
-            <a class="nav-item" data-page="transactions" href="#">
+            <a class="nav-item" data-page="transactions">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 <span>ธุรกรรม</span>
             </a>
-            
-            <!-- ⭐️ เมนูใหม่ ⭐️ -->
-            <a class="nav-item" data-page="reports" href="#">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H5a2 2 0 00-2 2zm0 0h18"></path></svg>
-                <span>รายงานโพสต์</span>
-            </a>
-            
-            <a class="nav-item" data-page="settings" href="#">
+            <a class="nav-item" data-page="settings">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 <span>ตั้งค่า</span>
             </a>
@@ -721,7 +683,7 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
                      </div>
-                     <div id="user-alert-message" class="alert-box"></div>
+                     <div id="user-alert-message" class="alert-box" style="display: none; position: relative; margin-bottom: 20px;"></div>
                      <div class="table-wrapper">
                          <table class="custom-table">
                             <thead>
@@ -740,9 +702,9 @@
                         </table>
                      </div>
                      @if($users->hasPages())
-                         <div class="pagination-links" style="padding: 1.5rem;">
-                             {{ $users->links(null, ['pageName' => 'users_page']) }}
-                         </div>
+                        <div class="pagination-links" style="padding: 1.5rem;">
+                            {{ $users->links() }}
+                        </div>
                     @endif
                 </div>
             </div>
@@ -826,92 +788,12 @@
                     
                     {{-- เพิ่มลิงก์ Pagination หากใช้ paginate() ใน Controller --}}
                     @if ($transactions instanceof \Illuminate\Contracts\Pagination\Paginator)
-                        <div class="pagination-links" style="padding: 1.5rem;">
-                            {{ $transactions->links(null, ['pageName' => 'transactions_page']) }}
+                        <div class="pagination-links">
+                            {{ $transactions->links() }}
                         </div>
                     @endif
                 </div>
             </div>
-            
-             <!-- ⭐️ หน้าใหม่ที่เพิ่มเข้ามา ⭐️ -->
-            <div id="reports" class="page">
-                <header class="main-header">
-                    <div class="header-left">
-                        <button class="sidebar-toggle-btn">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                        <h1>รายงานโพสต์</h1>
-                    </div>
-                </header>
-                <div class="card">
-                    <div class="card-header">
-                        <h3>รายการโพสต์ที่ถูกรายงาน</h3>
-                    </div>
-                    
-                    <div id="report-alert-message" class="alert-box"></div>
-
-                    <div class="table-wrapper">
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>ผู้รายงาน</th>
-                                    <th>รายละเอียดโพสต์ (เหตุผล)</th>
-                                    <th class="action-buttons">การกระทำ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{-- 
-                                    อัปเดต Loop ให้วนข้อมูล $reports จาก Controller
-                                --}}
-                                @forelse ($reports as $report)
-                                    <tr data-report-id="{{ $report->id }}">
-                                        {{-- 
-                                            แสดงอีเมลของผู้รายงาน (user ที่ report)
-                                            ใช้ relationship 'reporter' ที่ eager load มา
-                                        --}}
-                                        <td>{{ $report->reporter->email ?? 'ผู้ใช้ไม่ทราบชื่อ' }}</td>
-                                        
-                                        <td>
-                                            {{-- แสดงเหตุผลตามที่คุณกำหนด --}}
-                                            <strong>เหตุผล:</strong> -
-                                            <br>
-                                            
-                                            {{-- 
-                                                ตรวจสอบว่า post ยังอยู่หรือไม่ (อาจถูกลบไปแล้ว)
-                                                ถ้ายังอยู่ ให้สร้างลิงก์ไปยังโพสต์นั้น
-                                            --}}
-                                            @if ($report->post)
-                                                <a href="{{ route('posts.show', $report->post) }}" target="_blank" style="color: var(--primary-hover);">
-                                                    ดูโพสต์ (ID: {{ $report->post->id }})
-                                                </a>
-                                            @else
-                                                <span style="color: var(--status-banned);">โพสต์ถูกลบไปแล้ว</span>
-                                            @endif
-                                        </td>
-                                        <td class="action-buttons">
-                                            <button class="btn btn-sm btn-warning" data-action="delete-report">ลบรายงาน</button>
-                                            <button class="btn btn-sm btn-danger" data-action="delete-post" data-post-id="{{ $report->post_id ?? 0 }}">ลบโพสต์</button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" style="text-align: center; color: #999;">
-                                            ไม่มีรายงานในขณะนี้
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    @if ($reports->hasPages())
-                         <div class="pagination-links" style="padding: 1.5rem;">
-                             {{ $reports->links(null, ['pageName' => 'reports_page']) }}
-                         </div>
-                    @endif
-                </div>
-            </div>
-            <!-- ⭐️ สิ้นสุดหน้าใหม่ ⭐️ -->
             
              <!-- Settings Page -->
             <div id="settings" class="page">
@@ -975,7 +857,12 @@
                         </div>
                     </form>
                 </div>
+
+
+
             </div>
+
+
         </div>
     </main>
 </div>
@@ -984,9 +871,6 @@
 
 
 <script>
-    // ⭐️ (FIX) ย้าย csrfToken มาไว้ที่ Global Scope ของ Script ⭐️
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'); 
-
     document.addEventListener('DOMContentLoaded', () => {
         const navItems = document.querySelectorAll('.nav-item');
         const pages = document.querySelectorAll('.page');
@@ -996,7 +880,7 @@
         const overlay = document.getElementById('overlay');
 
         const monthlyReportData = @json($monthly_novel_reports);
-        // (ลบ csrfToken ออกจากตรงนี้)
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'); // ⭐️ 1. ดึง CSRF Token
 
         const openSidebar = () => {
             sidebar.classList.add('open');
@@ -1013,26 +897,14 @@
         overlay.addEventListener('click', closeSidebar);
 
         navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault(); // ⭐️ ป้องกันการโหลดหน้าใหม่
+            item.addEventListener('click', () => {
                 const pageId = item.getAttribute('data-page');
-                
-                // กันการคลิก logout
-                if (pageId === 'logout') return; 
 
                 navItems.forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
                 
                 pages.forEach(page => page.classList.remove('active'));
-                
-                const targetPage = document.getElementById(pageId);
-                if (targetPage) {
-                    targetPage.classList.add('active');
-                } else {
-                    console.error('Page not found:', pageId);
-                    document.getElementById('dashboard').classList.add('active'); // กลับหน้าหลักถ้าหาไม่เจอ
-                }
-
+                document.getElementById(pageId).classList.add('active');
 
                 if (window.innerWidth <= 992) {
                     closeSidebar();
@@ -1067,7 +939,7 @@
                     genreHtml += `<tr><td>${item.rank}</td><td>${item.type}</td><td>${item.count}</td></tr>`;
                 });
             } else {
-                genreHtml = '<tr><td colspan="3">ไม่มีข้อมูล</td></tr>'; 
+                genreHtml = '<tr><td colspan="3">ไม่มีข้อมูล</td></tr>'; // ⭐️ กรณีข้อมูลเป็น 0
             }
             genreTableBody.innerHTML = genreHtml;
 
@@ -1077,21 +949,23 @@
                     nationalityHtml += `<tr><td>${item.rank}</td><td>${item.type}</td><td>${item.count}</td></tr>`;
                 });
             } else {
-                nationalityHtml = '<tr><td colspan="3">ไม่มีข้อมูล</td></tr>'; 
+                nationalityHtml = '<tr><td colspan="3">ไม่มีข้อมูล</td></tr>'; // ⭐️ กรณีข้อมูลเป็น 0
             }
             nationalityTableBody.innerHTML = nationalityHtml;
         }
 
-        if (monthSelector) { // ⭐️ ตรวจสอบว่ามี selector ไหม
-            monthSelector.addEventListener('change', (event) => {
-                updateMonthlyReports(event.target.value);
-            });
+        monthSelector.addEventListener('change', (event) => {
+            updateMonthlyReports(event.target.value);
+        });
 
-            if (monthSelector.value) {
-                updateMonthlyReports(monthSelector.value);
-            }
+        if (monthSelector && monthSelector.value) {
+            updateMonthlyReports(monthSelector.value);
         }
 
+
+
+        // Initial load for the default selected month
+        updateMonthlyReports(monthSelector.value);
 
         // ==========================================================
     // ⭐️ 2. เพิ่มส่วนจัดการผู้ใช้ (USER MANAGEMENT LOGIC) ⭐️
@@ -1100,27 +974,31 @@
     // 2.1. เลือก DIV Alert สำหรับหน้านี้
     const alertMessageDiv = document.getElementById('user-alert-message'); 
 
-    // 2.2. เพิ่มฟังก์ชัน Alert
+    // 2.2. เพิ่มฟังก์ชัน Alert ที่คุณให้มา
     function showAlert(message, type = 'info') {
         if (!alertMessageDiv) {
             console.error("Missing alert element (user-alert-message)!");
             return;
         }
         alertMessageDiv.textContent = message;
-        alertMessageDiv.className = `alert-box ${type}`; // 'success', 'error', 'info'
+        alertMessageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
+        alertMessageDiv.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
+        alertMessageDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#b8daff'}`;
+        alertMessageDiv.style.position = 'relative'; 
+        alertMessageDiv.style.top = '0';
+        alertMessageDiv.style.right = '0';
+        alertMessageDiv.style.zIndex = '100';
+        alertMessageDiv.style.padding = '15px';
+        alertMessageDiv.style.borderRadius = '8px';
         alertMessageDiv.style.display = 'block';
-        
         setTimeout(hideAlert, 5000);
     }
 
     function hideAlert() {
-        if (alertMessageDiv) {
-            alertMessageDiv.style.display = 'none';
-            alertMessageDiv.className = 'alert-box'; // Reset class
-        }
+        if (alertMessageDiv) alertMessageDiv.style.display = 'none';
     }
 
-    // 2.3. เลือกตารางและใช้ Event Delegation
+// 2.3. เลือกตารางและใช้ Event Delegation
     const usersTableBody = document.getElementById('users-table-body');
 
     if (usersTableBody) {
@@ -1144,7 +1022,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken ?? '' // ⭐️ (FIX) ใช้ csrfToken จาก global
+                        'X-CSRF-TOKEN': csrfToken ?? ''
                     },
                     body: JSON.stringify({
                         user_id: userId,
@@ -1159,22 +1037,30 @@
                 }
 
                 // --- อัปเดตตารางเมื่อสำเร็จ ---
+
+                // 1. อัปเดต data-status ของแถว
                 tr.dataset.status = data.new_status;
+
+                // 2. อัปเดตป้ายสถานะ (Status Tag)
                 const statusTag = tr.querySelector('.status-tag');
                 
+                // (โค้ดนี้จะตรวจสอบ 1 หรือ 2 และไม่มี .charAt)
                 if (data.new_status == 1) { 
                     statusTag.textContent = 'Active';
                     statusTag.className = 'status-tag active';
                 } else {
                     statusTag.textContent = 'Banned';
                     statusTag.className = 'status-tag banned';
+
                 }
 
+               
+                // 3. อัปเดตปุ่ม
                 if (data.new_status == 1) {
                     button.textContent = 'แบน';
                     button.className = 'btn btn-sm btn-danger';
                     button.dataset.action = 'ban';
-                
+           
                 } else {
                     button.textContent = 'ปลดแบน';
                     button.className = 'btn btn-sm btn-warning';
@@ -1193,11 +1079,14 @@
     }
 
     // ==========================================================
-        // ⭐️ 3. ค้นหาผู้ใช้ (AJAX DATABASE SEARCH LOGIC) ⭐️
+        // ⭐️ 3. (โค้ดใหม่) ค้นหาผู้ใช้ (AJAX DATABASE SEARCH LOGIC) ⭐️
         // ==========================================================
 
         const userSearchInput = document.getElementById('user-search-input');
         
+        // (เราใช้ตัวแปร usersTableBody ที่มีอยู่แล้วจากโค้ดด้านบน)
+
+        // --- ฟังก์ชัน Debounce (กันยิง Request รัวๆ) ---
         let searchTimer;
         function debounce(func, delay) {
             clearTimeout(searchTimer);
@@ -1209,11 +1098,14 @@
             userSearchInput.addEventListener('input', () => {
                 const query = userSearchInput.value.trim();
                 
+                // หน่วง 300ms ค่อยค้นหา
                 debounce(async () => {
                     try {
+                        // 1. สร้าง URL พร้อม query string
                         const searchUrl = new URL('{{ route("admin.users.search") }}');
                         searchUrl.searchParams.append('query', query);
 
+                        // 2. ยิง AJAX
                         const response = await fetch(searchUrl, {
                             method: 'GET',
                             headers: {
@@ -1226,116 +1118,21 @@
                             throw new Error('Search request failed');
                         }
 
+                        // 3. รับ HTML (จาก Partial View)
                         const html = await response.text();
+                        
+                        // 4. ยัด HTML ใหม่เข้าไปใน <tbody>
                         usersTableBody.innerHTML = html;
 
                     } catch (error) {
                         console.error('Search error:', error);
+                        // (ถ้าอยากให้แจ้งเตือน ก็เรียก showAlert('ค้นหาล้มเหลว', 'error');)
                     }
-                }, 300); 
+                }, 300); // หน่วง 300 มิลลิวินาที
             });
         }
-    }); // <-- สิ้นสุด DOMContentLoaded
 
-    // ==========================================================
-    // ⭐️ 4. จัดการรายงานโพสต์ (AJAX REPORT LOGIC) ⭐️
-    // (อยู่นอก DOMContentLoaded แต่ยังเข้าถึง csrfToken ได้)
-    // ==========================================================
-    const reportAlertDiv = document.getElementById('report-alert-message');
-    const reportsPage = document.getElementById('reports'); // อ้างอิงจาก ID ของ Page
-
-    function showReportAlert(message, type = 'info') {
-        if (!reportAlertDiv) return;
-        reportAlertDiv.textContent = message;
-        reportAlertDiv.className = `alert-box ${type}`;
-        reportAlertDiv.style.display = 'block';
-        setTimeout(() => {
-            reportAlertDiv.style.display = 'none';
-            reportAlertDiv.className = 'alert-box';
-        }, 5000);
-    }
-
-    if (reportsPage) {
-        // ใช้ Event Delegation กับหน้า 'reports'
-        reportsPage.addEventListener('click', async (event) => {
-            const button = event.target.closest('button[data-action]');
-            if (!button) return;
-
-            event.preventDefault();
-            
-            const action = button.dataset.action; // 'delete-report' or 'delete-post'
-            const tr = button.closest('tr');
-            const reportId = tr.dataset.reportId;
-            const originalButtonText = button.textContent;
-
-            // -- 1. จัดการการลบรายงาน (Delete Report) --
-            if (action === 'delete-report') {
-                button.disabled = true;
-                button.textContent = 'กำลังลบ...';
-                
-                try {
-                    const response = await fetch(`{{ url('admin/reports') }}/${reportId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken ?? '' // ⭐️ (FIX) ใช้ csrfToken จาก global
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'ไม่สามารถลบรายงานได้');
-
-                    showReportAlert(data.message, 'success');
-                    tr.style.opacity = '0';
-                    tr.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => tr.remove(), 500); 
-
-                } catch (error) {
-                    showReportAlert(error.message, 'error');
-                    button.disabled = false;
-                    button.textContent = originalButtonText;
-                }
-            } 
-            
-            // -- 2. จัดการการลบโพสต์ (Delete Post) --
-            if (action === 'delete-post') {
-                const postId = button.dataset.postId;
-                if (!postId || postId === '0') {
-                    showReportAlert('ไม่พบ ID โพสต์ (โพสต์อาจถูกลบไปแล้ว)', 'error');
-                    return;
-                }
-
-                button.disabled = true;
-                button.textContent = 'กำลังลบ...';
-                
-                try {
-                    const response = await fetch(`{{ url('admin/posts') }}/${postId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken ?? '' // ⭐️ (FIX) ใช้ csrfToken จาก global
-                        }
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'ไม่สามารถลบโพสต์ได้');
-
-                    showReportAlert(data.message, 'success');
-                    tr.style.opacity = '0';
-                    tr.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => tr.remove(), 500); 
-
-                } catch (error) {
-                    showReportAlert(error.message, 'error');
-                    button.disabled = false;
-                    button.textContent = originalButtonText;
-                }
-            }
-        });
-    }
-
+    });
 </script>
 </body>
 </html>

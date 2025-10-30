@@ -361,7 +361,7 @@
         }
          .testimonial-rating .stars svg.filled {
             color: var(--warning-color);
-        }
+         }
         .testimonial-rating .rating-text {
             color: var(--text-secondary);
             font-size: 0.9rem;
@@ -449,6 +449,67 @@
             pointer-events: auto;
         }
 
+        /* *** MODIFIED: Avatar Styles *** */
+        .avatar-preview-group {
+            display: flex; /* Use flex for centering */
+            flex-direction: column; /* Stack label and input */
+            align-items: center; /* Center horizontally */
+            gap: 10px; /* Space between preview and text */
+            margin-bottom: 20px; /* Space below avatar block */
+        }
+        .avatar-preview {
+            width: 120px; /* Larger size */
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--bg-dark);
+            overflow: hidden;
+            border: 3px solid var(--border-color);
+            cursor: pointer; /* Make it look clickable */
+            position: relative; /* For overlay */
+            transition: box-shadow 0.3s ease;
+        }
+         .avatar-preview:hover {
+             border-color: var(--primary-accent);
+             box-shadow: 0 0 15px rgba(108, 93, 211, 0.3);
+         }
+        .avatar-preview img,
+        .avatar-preview svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-preview:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(18, 24, 40, 0.6);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; /* Allow click to pass through to label */
+        }
+        .avatar-upload-overlay svg {
+            width: 32px;
+            height: 32px;
+        }
+         .avatar-upload-overlay span {
+             font-size: 0.8rem;
+             font-weight: 500;
+             margin-top: 5px;
+         }
+
+        /* Style to hide the real file input */
+        .form-input-hidden {
+            display: none;
+        }
+        /* *** END MODIFIED Styles *** */
+
         @media (max-width: 992px) {
             .sidebar {
                 position: fixed;
@@ -504,7 +565,7 @@
                 <span>ตั้งค่าบัญชี</span>
             </a>
             <a class="nav-item" data-page="review">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.285a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                 <span>รีวิว</span>
             </a>
             <a class="nav-item" data-page="affiliate">
@@ -524,8 +585,8 @@
         </nav>
         <div class="sidebar-footer">
             <div class="user-profile">
-                <span class="username">สมชาย ใจดี</span>
-                <span class="email">somchai.j@email.com</span>
+                <span class="username">{{ Auth::user()->name }}</span>
+                <span class="email">{{ Auth::user()->email }}</span>
             </div>
         </div>
     </aside>
@@ -578,24 +639,24 @@
                     </div>
                     <div class="ebook-list">
                         @forelse ($novels as $novel) <div class="ebook-item">
-                                <div class="ebook-details">
-                                    <h4>{{ $novel->title }}</h4>
-                                    <p>
-                                        {{ $novel->styleName }} • 
-                                        สร้างเมื่อ: {{ $novel->created_at->locale('th')->isoFormat('D MMMM Y') }}
-                                    </p>
-                                </div>
-                                <div class="ebook-actions">
-                                    @if (!$novel->isFinished)
-                                        <a href="{{ route('novel.edit', $novel) }}" class="btn btn-secondary">เขียนต่อ</a>
-                                    @endif
-                                    {{-- <a href="#" class="btn btn-secondary">จัดการนิยาย</a> --}}
-                                    <button class="btn btn-secondary download-novel-btn" data-novel-id="{{ $novel->id }}" data-novel-title="{{ $novel->title }}">
-                                        <span>ดาวน์โหลด</span>
-                                        <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px; margin-left: 5px; border-color: currentColor; border-right-color: transparent;"></div>
-                                    </button>
-                                </div>
+                            <div class="ebook-details">
+                                <h4>{{ $novel->title }}</h4>
+                                <p>
+                                    {{ $novel->styleName }} • 
+                                    สร้างเมื่อ: {{ $novel->created_at->locale('th')->isoFormat('D MMMM Y') }}
+                                </p>
                             </div>
+                            <div class="ebook-actions">
+                                @if (!$novel->isFinished)
+                                    <a href="{{ route('novel.edit', $novel) }}" class="btn btn-secondary">เขียนต่อ</a>
+                                @endif
+                                {{-- <a href="#" class="btn btn-secondary">จัดการนิยาย</a> --}}
+                                <button class="btn btn-secondary download-novel-btn" data-novel-id="{{ $novel->id }}" data-novel-title="{{ $novel->title }}">
+                                    <span>ดาวน์โหลด</span>
+                                    <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px; margin-left: 5px; border-color: currentColor; border-right-color: transparent;"></div>
+                                </button>
+                            </div>
+                        </div>
                         @empty
                             <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
                                 <p>คุณยังไม่มีนิยาย</p>
@@ -614,14 +675,14 @@
                 <header class="main-header">
                     <div class="header-left">
                          <button class="sidebar-toggle-btn" id="sidebar-toggle-btn-library">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
+                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                         </button>
                         <h1>นิยายของฉัน</h1>
                     </div>
                 </header>
                 <div class="card">
                      <div class="ebook-list" id="full-ebook-list">
-                        </div>
+                         </div>
                 </div>
             </div> --}}
 
@@ -629,8 +690,8 @@
                 <header class="main-header">
                      <div class="header-left">
                          <button class="sidebar-toggle-btn" id="sidebar-toggle-btn-billing">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
+                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                         </button>
                         <h1>เครดิต</h1>
                     </div>
                 </header>
@@ -658,11 +719,15 @@
                                 <div class="credits">{{ number_format($package->credits) }} เครดิต</div>
                                 <p class="price">{{ number_format($package->price) }} บาท</p>
                                 
-   
-                                 <button type="button" class="btn btn-primary purchase-btn" data-package-id="{{ $package->id }}">
-                                    <span>ซื้อแพ็กเกจ</span>
-                                    <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px;"></div>
-                                </button>
+
+                                 {{-- <button type="button" class="btn btn-primary purchase-btn" data-package-id="{{ $package->id }}">
+                                     <span>ซื้อแพ็กเกจ</span>
+                                     <div class="loader" style="display: none; width: 16px; height: 16px; border-width: 2px;"></div>
+                                 </button> --}}
+
+                                 <a href="{{ route('credits.checkout', $package->id) }}" class="btn btn-primary">
+                                     <span>ซื้อแพ็กเกจ</span>
+                                 </a>
 
                             </div>
                         @empty
@@ -745,44 +810,120 @@
                         <h1>ตั้งค่าบัญชี</h1>
                     </div>
                 </header>
+                
+                {{-- *** MODIFIED: Fallback to placehold.co *** --}}
+                @php
+                    // Use plain PHP function to avoid class resolution issues in cached views
+                    if (!function_exists('getDashboardUserAvatar')) {
+                        function getDashboardUserAvatar() {
+                            $user = Auth::user();
+                            if ($user->avatar_url) {
+                                // 1. ถ้ามี avatar_url (อัปโหลดเอง)
+                                return asset('storage/' . $user->avatar_url);
+                            } else {
+                                // 2. *** FALLBACK: กลับไปใช้ placehold.co (ตัวอักษรย่อ) ***
+                                $name = $user->pen_name ?: $user->name;
+                                $initial = mb_substr($name, 0, 1) ?: 'U';
+                                return "https://placehold.co/120x120/A9B4D9/121828?text=" . urlencode(strtoupper($initial));
+                            }
+                        }
+                    }
+                    $avatar_url = getDashboardUserAvatar();
+                @endphp
+
+                <!-- ฟอร์มข้อมูลส่วนตัว -->
                 <div class="card">
                     <div class="card-header">
                         <h3>ข้อมูลส่วนตัว</h3>
                     </div>
-                    <form class="form-grid">
+                    {{-- *** MODIFIED: Added enctype for file uploads *** --}}
+                    <form class="form-grid" method="POST" action="{{ route('dashboard.settings.update.profile') }}" enctype="multipart/form-data">
+                        @csrf
+                        
+                        @if (session('profile_success'))
+                            <div class="alert alert-success">{{ session('profile_success') }}</div>
+                        @endif
+                        @if (session('profile_error'))
+                            <div class="alert alert-danger">{{ session('profile_error') }}</div>
+                        @endif
+
+                        <!-- *** MODIFIED: Avatar Upload Field *** -->
+                        <div class="form-group avatar-preview-group">
+                            <label for="avatar_file" class="avatar-preview" id="avatar-preview-label" title="เปลี่ยนรูปโปรไฟล์">
+                                {{-- แสดง Avatar ปัจจุบัน (อัปโหลด หรือ Placehold) --}}
+                                <img src="{{ $avatar_url }}" alt="Avatar ปัจจุบัน" id="avatar-preview-img">
+                                <div class="avatar-upload-overlay">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <span>เปลี่ยนรูป</span>
+                                </div>
+                            </label>
+                            {{-- ซ่อน Input file จริง --}}
+                            <input type="file" id="avatar_file" name="avatar_file" class="form-input-hidden @error('avatar_file') is-invalid @enderror" accept="image/png, image/jpeg, image/jpg">
+                            
+                            {{-- แสดงข้อความ Error (ถ้ามี) --}}
+                            @error('avatar_file')
+                                <span class="invalid-feedback" style="text-align: center; display: block;">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <!-- *** END MODIFIED Field *** -->
+
+
                         <div class="form-group">
-                            <label for="username">ชื่อผู้ใช้</label>
-                            <input type="text" id="username" class="form-input" value="สมชาย ใจดี">
+                            <label for="name">ชื่อผู้ใช้</label>
+                            <input type="text" id="name" name="name" class="form-input @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name) }}">
+                            @error('name')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
-                            <label for="penname">นามปากกา</label>
-                            <input type="text" id="penname" class="form-input" placeholder="กรอกนามปากกาของคุณ">
+                            <label for="pen_name">นามปากกา</label>
+                            <input type="text" id="pen_name" name="pen_name" class="form-input @error('pen_name') is-invalid @enderror" placeholder="กรอกนามปากกาของคุณ" value="{{ old('pen_name', Auth::user()->pen_name) }}">
+                            @error('pen_name')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="email">อีเมล</label>
-                            <input type="email" id="email" class="form-input" value="somchai.j@email.com" disabled>
+                            <input type="email" id="email" name="email" class="form-input" value="{{Auth::user()->email}}" disabled>
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
                         </div>
                     </form>
                 </div>
-                 <div class="card">
+
+                <!-- ฟอร์มเปลี่ยนรหัสผ่าน -->
+                <div class="card">
                     <div class="card-header">
                         <h3>เปลี่ยนรหัสผ่าน</h3>
                     </div>
-                    <form class="form-grid">
+                    <form class="form-grid" method="POST" action="{{ route('dashboard.settings.update.password') }}">
+                        @csrf
+                        
+                        @if (session('password_success'))
+                            <div class="alert alert-success">{{ session('password_success') }}</div>
+                        @endif
+                        @if (session('password_error'))
+                            <div class="alert alert-danger">{{ session('password_error') }}</div>
+                        @endif
+
                         <div class="form-group">
                             <label for="current_password">รหัสผ่านปัจจุบัน</label>
-                            <input type="password" id="current_password" class="form-input">
+                            <input type="password" name="current_password" id="current_password" class="form-input @error('current_password') is-invalid @enderror">
+                            @error('current_password')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
-                            <label for="new_password">รหัสผ่านใหม่</label>
-                            <input type="password" id="new_password" class="form-input">
+                            <label for="password">รหัสผ่านใหม่</label>
+                            <input type="password" name="password" id="password" class="form-input @error('password') is-invalid @enderror">
+                            @error('password')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
-                         <div class="form-group">
-                            <label for="confirm_password">ยืนยันรหัสผ่านใหม่</label>
-                            <input type="password" id="confirm_password" class="form-input">
+                        <div class="form-group">
+                            <label for="password_confirmation">ยืนยันรหัสผ่านใหม่</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-input">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">เปลี่ยนรหัสผ่าน</button>
@@ -804,24 +945,37 @@
                 <div class="card">
                     <div class="review-layout">
                         <div class="review-form-container">
-                             <div class="card-header" style="padding-left: 0; padding-right: 0;">
+                            <div class="card-header" style="padding-left: 0; padding-right: 0;">
                                 <h3>ส่งความคิดเห็นของคุณ</h3>
                             </div>
-                            <form id="review-form" class="form-grid">
+                            <form class="form-grid" method="POST" action="{{ route('dashboard.review.submit') }}">
+                                @csrf
+                                @if (session('review_success'))
+                                    <div class="alert alert-success">{{ session('review_success') }}</div>
+                                @endif
+                                @if (session('review_error'))
+                                    <div class="alert alert-danger">{{ session('review_error') }}</div>
+                                @endif
                                 <div class="form-group">
                                     <label>ให้คะแนนความพึงพอใจ</label>
                                     <div class="rating-stars" id="rating-stars">
-                                        <input type="hidden" name="rating" id="rating-value" value="0">
+                                        <input type="hidden" name="rating" id="rating-value" value="{{ old('rating', $userReview->rating ?? 0) }}">
                                         <svg class="star" data-value="1" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                                         <svg class="star" data-value="2" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                                         <svg class="star" data-value="3" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                                         <svg class="star" data-value="4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                                         <svg class="star" data-value="5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
                                     </div>
+                                    @error('rating')
+                                        <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
+                                    @enderror
                                 </div>
                                 <div class="form-group">
                                     <label for="review-text">ข้อความรีวิว</label>
-                                    <textarea id="review-text" class="form-input" rows="5" placeholder="ตอนแรกก็กลัวว่าจะใช้ยาก แต่ Novel Noob ใช้ง่ายกว่าที่คิดมากค่ะ AI ช่วยวางโครงเรื่องและเขียนร่างแรกได้ดี ทำให้การเขียนนิยายเรื่องแรกของฉันไม่สะดุดเลย"></textarea>
+                                    <textarea id="review-text" class="form-input" name="content" rows="5" placeholder="ตอนแรกก็กลัวว่าจะใช้ยาก แต่ Novel Noob ใช้ง่ายกว่าที่คิดมากค่ะ AI ช่วยวางโครงเรื่องและเขียนร่างแรกได้ดี ทำให้การเขียนนิยายเรื่องแรกของฉันไม่สะดุดเลย">{{ old('content', $userReview->content ?? '') }}</textarea>
+                                    @error('content')
+                                        <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
+                                    @enderror
                                 </div>
                                 <div class="form-actions">
                                     <button type="submit" class="btn btn-primary">ส่งรีวิว</button>
@@ -829,12 +983,12 @@
                             </form>
                         </div>
                         <div class="review-preview-container">
-                             <div class="card-header" style="border: none;">
+                            <div class="card-header" style="border: none;">
                                 <h3>ตัวอย่างรีวิว</h3>
                             </div>
                             <div class="testimonial-card">
-                                <p class="testimonial-text" id="preview-text">ตอนแรกก็กลัวว่าจะใช้ยาก แต่ Novel Noob ใช้ง่ายกว่าที่คิดมากค่ะ AI ช่วยวางโครงเรื่องและเขียนร่างแรกได้ดี ทำให้การเขียนนิยายเรื่องแรกของฉันไม่สะดุดเลย</p>
-                                <p class="testimonial-author" id="preview-author">นามปากกา: <span>นักเขียนนิยายอิสระ</span></p>
+                                <p class="testimonial-text" id="preview-text">{{ $userReview->content ?? 'ตอนแรกก็กลัวว่าจะใช้ยาก แต่ Novel Noob ใช้ง่ายกว่าที่คิดมากค่ะ AI ช่วยวางโครงเรื่องและเขียนร่างแรกได้ดี ทำให้การเขียนนิยายเรื่องแรกของฉันไม่สะดุดเลย' }}</p>
+                                <p class="testimonial-author" id="preview-author">นามปากกา: <span>{{Auth::user()->pen_name}}</span></p>
                                 <div class="testimonial-rating">
                                     <div class="stars" id="preview-stars">
                                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
@@ -843,14 +997,14 @@
                                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
                                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
                                     </div>
-                                    <span class="rating-text" id="preview-rating-text">0/5</span>
+                                    <span class="rating-text" id="preview-rating-text">{{ $userReview->rating ?? 0 }}/5</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+                    
             <!-- Affiliate Page -->
             <div id="affiliate" class="page">
                 <header class="main-header">
@@ -869,7 +1023,7 @@
                         แชร์ลิงก์นี้เพื่อเชิญเพื่อนมาใช้งาน Novel Noob และรับเครดิต 20% จากทุกยอดการสั่งซื้อของผู้ที่คุณแนะนำ
                     </p>
                     <div class="affiliate-link-container">
-                        <input type="text" id="affiliate-link" class="form-input" value="https://novelnoob.ai/?ref=somchai_j" readonly>
+                        <input type="text" id="affiliate-link" class="form-input" value="{{url('')}}/?ref={{Auth::user()->affiliate}}" readonly>
                         <button id="copy-affiliate-link-btn" class="btn btn-primary">
                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             <span>คัดลอกลิงก์</span>
@@ -881,14 +1035,14 @@
                      <div class="stat-card">
                         <div class="stat-icon" style="color: var(--primary-accent);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div>
                         <div class="stat-info">
-                            <div class="value">3</div>
+                            <div class="value">{{ $totalReferred }}</div>
                             <div class="label">จำนวนผู้สมัครผ่านลิงก์</div>
                         </div>
                     </div>
                      <div class="stat-card">
                         <div class="stat-icon" style="color: var(--status-completed);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 12v.01M12 12v-1m0 1H9.598M12 12h2.402M12 16v.01M12 16v-1m0 1H9.598M12 16h2.402M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
                         <div class="stat-info">
-                            <div class="value">540</div>
+                            <div class="value">{{ number_format($totalCreditsEarned) }}</div>
                             <div class="label">เครดิตที่ได้รับทั้งหมด</div>
                         </div>
                     </div>
@@ -909,24 +1063,31 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>25 ส.ค. 2568</td>
-                                    <td>writ****@email.com</td>
-                                    <td>500</td>
-                                    <td><span class="credit-gain">+100 เครดิต</span></td>
-                                </tr>
-                                 <tr>
-                                    <td>15 ส.ค. 2568</td>
-                                    <td>book******@email.com</td>
-                                    <td>1,200</td>
-                                    <td><span class="credit-gain">+240 เครดิต</span></td>
-                                </tr>
-                                <tr>
-                                    <td>01 ก.ค. 2568</td>
-                                    <td>stor***@email.com</td>
-                                    <td>1,000</td>
-                                    <td><span class="credit-gain">+200 เครดิต</span></td>
-                                </tr>
+                                @forelse ($affiliateTransactions as $affTx)
+                                  
+                                    @php
+                                    // dd($affTx);
+                                        $packagePrice = optional($affTx->package)->price ?? 0;
+                                        $packageCredits = optional($affTx->package)->credits ?? 0;
+                                        $earnedCredits = $packageCredits * 0.20;
+                                        // เนื่องจาก migration ล่าสุดไม่ได้เก็บ referred_user_id เราอาจต้องหา user จาก transaction หลัก
+                                        // แต่ถ้าไม่มีข้อมูลดังกล่าว เราจะแสดงเป็น 'ผู้ใช้งานใหม่' หรือใช้ข้อมูลที่มี
+                                        $referredUserEmail = $affTx->referrer_masked_email; // เนื่องจาก migration ไม่ได้เก็บข้อมูลนี้
+                                        
+                                        // ถ้าคุณได้เพิ่ม referred_user_id ใน migration ก่อนหน้านี้, คุณสามารถใช้ $affTx->referredUser->email
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $affTx->created_at->format('d M Y') }}</td>
+                                        {{-- หากไม่มี referred_user_id ใน migration ล่าสุด เราต้องแสดงเป็นค่าทั่วไป --}}
+                                        <td>{{ $referredUserEmail }}</td> 
+                                        <td>{{ number_format($packagePrice) }}</td>
+                                        <td><span class="credit-gain">+{{ number_format($earnedCredits) }} เครดิต</span></td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" style="text-align: center;">ยังไม่มีรายการรับเครดิต</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -978,12 +1139,6 @@
         overlay.addEventListener('click', closeSidebar);
 
 
-        // --- Mock Data ---
-        // const mockEbooks = [
-        //     { title: "ปริศนาแห่งเซ็นทินัล", genre: "แนวสืบสวนสอบสวน", date: "29 ส.ค. 2568" },
-        //     { title: "บันทึกรักข้ามภพ", genre: "แนวโรแมนติก", date: "15 ก.ค. 2568" },
-        //     { title: "สงครามดวงดาวไร้สิ้นสุด", genre: "แนววิทยาศาสตร์", date: "01 พ.ค. 2568" },
-        // ];
 
         document.querySelectorAll('.download-novel-btn').forEach(button => {
             button.addEventListener('click', async (e) => {
@@ -1040,173 +1195,6 @@
             });
         });
 
-        
-    async function handleFetchError(response, contextMessage = 'เกิดข้อผิดพลาด') {
-        const status = response.status;
-        let errorData = {};
-        let errorMessage = `เกิดข้อผิดพลาด (${status})`;
-        try {
-            if (response.headers.get('content-type')?.includes('application/json')) {
-                errorData = await response.json();
-                errorMessage = errorData.message || errorData.error || errorMessage;
-            } else { errorMessage = (await response.text()) || errorMessage; }
-        } catch (e) { console.error(`Failed to parse error body for ${contextMessage}:`, e); }
-
-        console.error(`${contextMessage} (${status}):`, errorData.details || errorData.errors || errorData || errorMessage);
-
-        let alertMsg = errorMessage;
-        if (errorData.errors) alertMsg += "\n- " + Object.values(errorData.errors).flat().join("\n- ");
-        else if (errorData.details && typeof errorData.details === 'object') try { alertMsg += ` (${JSON.stringify(errorData.details)})`; } catch (e) {}
-        else if (errorData.details) alertMsg += ` (${errorData.details})`;
-
-        alert(alertMsg, 'error');
-
-        if ((status === 401 || status === 403) && errorData.redirect_to) {
-            window.location.href = errorData.redirect_to;
-            throw new Error("Redirecting due to authorization error.");
-        }
-        const error = new Error(errorMessage);
-        error.status = status; error.data = errorData;
-        throw error;
-    }
-        // --- Purchase Button Logic (เฉพาะส่วนนี้) ---
-    document.querySelectorAll('.purchase-btn').forEach(button => {
-        button.addEventListener('click', async function() { // Use async
-            const packageId = this.dataset.packageId;
-            const buttonSpan = this.querySelector('span');
-            const buttonLoader = this.querySelector('.loader');
-            const creditBalanceDisplay = document.getElementById('credit-balance-display'); // Get balance display element
-            const alertMessageDiv = document.getElementById('alert-message'); // Get alert element
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // --- Helper: Show Alert ---
-            function showAlert(message, type = 'info') {
-                if (!alertMessageDiv) return;
-                alertMessageDiv.textContent = message;
-                alertMessageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
-                alertMessageDiv.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
-                alertMessageDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#b8daff'}`;
-                // Ensure other required styles are set for visibility
-                alertMessageDiv.style.position = 'fixed';
-                alertMessageDiv.style.top = '20px';
-                alertMessageDiv.style.right = '20px';
-                alertMessageDiv.style.zIndex = '1050';
-                alertMessageDiv.style.padding = '15px';
-                alertMessageDiv.style.borderRadius = '8px';
-                alertMessageDiv.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-                alertMessageDiv.style.display = 'block';
-                setTimeout(hideAlert, 5000); // Auto-hide after 5 seconds
-            }
-
-            // --- Helper: Hide Alert ---
-            function hideAlert() {
-                if (alertMessageDiv) alertMessageDiv.style.display = 'none';
-            }
-
-            // --- Helper: Format Number ---
-            function formatNumber(num) {
-                try { return new Intl.NumberFormat('th-TH').format(num); }
-                catch (e) { return String(num); } // Fallback
-            }
-
-            // --- Helper: Handle Fetch Errors ---
-            async function handleFetchError(response, contextMessage = 'เกิดข้อผิดพลาด') {
-                const status = response.status;
-                let errorData = {};
-                let errorMessage = `เกิดข้อผิดพลาด (${status})`;
-                try {
-                    if (response.headers.get('content-type')?.includes('application/json')) {
-                        errorData = await response.json();
-                        errorMessage = errorData.message || errorData.error || errorMessage;
-                    } else { errorMessage = (await response.text()) || errorMessage; }
-                } catch (e) { console.error(`Failed to parse error body for ${contextMessage}:`, e); }
-
-                console.error(`${contextMessage} (${status}):`, errorData.details || errorData.errors || errorData || errorMessage);
-
-                let alertMsg = errorMessage;
-                if (errorData.errors) alertMsg += "\n- " + Object.values(errorData.errors).flat().join("\n- ");
-                else if (errorData.details && typeof errorData.details === 'object') try { alertMsg += ` (${JSON.stringify(errorData.details)})`; } catch (e) {}
-                else if (errorData.details) alertMsg += ` (${errorData.details})`;
-
-                showAlert(alertMsg, 'error'); // Use showAlert helper
-
-                if ((status === 401 || status === 403) && errorData.redirect_to) {
-                    window.location.href = errorData.redirect_to;
-                    throw new Error("Redirecting due to authorization error.");
-                }
-                const error = new Error(errorMessage);
-                error.status = status; error.data = errorData;
-                throw error;
-            }
-            // --- End Helpers ---
-
-            if (!packageId || this.disabled) return;
-
-            this.disabled = true;
-            if (buttonSpan) buttonSpan.style.display = 'none';
-            if (buttonLoader) buttonLoader.style.display = 'inline-block';
-            hideAlert(); // Hide previous alerts
-
-            try {
-                const response = await fetch('{{ route("credits.purchase") }}', { // Ensure this route name is correct
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken ?? ''
-                    },
-                    body: JSON.stringify({ package_id: packageId })
-                });
-
-                if (!response.ok) await handleFetchError(response, 'เกิดข้อผิดพลาดในการซื้อเครดิต'); // handleFetchError throws on error
-
-                const data = await response.json();
-               
-                if (data.status === 'success') {
-                     console.log(data)
-                    showAlert(`สำเร็จ! ได้รับ ${formatNumber(data.credits_added || 0)} เครดิต ยอดคงเหลือใหม่ ${data.new_balance !== undefined ? formatNumber(data.new_balance) : 'N/A'}`, 'success');
-                    if (creditBalanceDisplay && data.new_balance !== undefined) {
-                        creditBalanceDisplay.textContent = formatNumber(data.new_balance); // Update balance display
-                    }
-                    // Potentially update transaction history if displayed dynamically
-                } else {
-                    // This case might be redundant if handleFetchError catches all non-ok responses
-                    showAlert(data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ', 'error');
-                }
-            } catch (error) {
-                if (error.message !== "Redirecting due to authorization error.") {
-                    console.error('Purchase Error caught:', error);
-                    // Alert is likely already handled by handleFetchError
-                }
-            } finally {
-                this.disabled = false;
-                if (buttonSpan) buttonSpan.style.display = 'inline-block';
-                if (buttonLoader) buttonLoader.style.display = 'none';
-            }
-        });
-    });
-
-    // function populateEbookLibrary() {
-    //     const libraryContainer = document.getElementById('full-ebook-list');
-    //     if (!libraryContainer) return;
-
-    //     libraryContainer.innerHTML = '';
-    //     mockEbooks.forEach(ebook => {
-    //         const ebookElement = document.createElement('div');
-    //         ebookElement.className = 'ebook-item';
-    //         ebookElement.innerHTML = `
-    //             <div class="ebook-details">
-    //                 <h4>${ebook.title}</h4>
-    //                 <p>${ebook.genre} • สร้างเมื่อ: ${ebook.date}</p>
-    //             </div>
-    //             <div class="ebook-actions">
-    //                 <button class="btn btn-secondary">ดาวน์โหลด</button>
-    //                 <button class="btn btn-danger">ลบ</button>
-    //             </div>
-    //         `;
-    //         libraryContainer.appendChild(ebookElement);
-    //     });
-    // }
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -1221,34 +1209,44 @@
         });
     });
     
-    // --- Review Page Logic ---
     const ratingStarsContainer = document.getElementById('rating-stars');
     const stars = document.querySelectorAll('.rating-stars .star');
     const ratingValueInput = document.getElementById('rating-value');
     const reviewForm = document.getElementById('review-form');
     const notification = document.getElementById('notification');
     const reviewTextArea = document.getElementById('review-text');
-    const penNameInput = document.getElementById('penname');
+    const penNameInput = document.getElementById('pen_name');
     const previewText = document.getElementById('preview-text');
     const previewAuthor = document.getElementById('preview-author');
     const previewStars = document.querySelectorAll('#preview-stars svg');
     const previewRatingText = document.getElementById('preview-rating-text');
-    const defaultUsername = document.querySelector('.user-profile .username').textContent;
+    // สมมติว่า `.user-profile .username` มีอยู่เพื่อดึงชื่อผู้ใช้
+    const defaultUsername = document.querySelector('.user-profile .username') ? document.querySelector('.user-profile .username').textContent : '';
 
     function updatePreview() {
+        // ใช้ค่าจาก textarea หรือ placeholder หากว่างเปล่า
         previewText.textContent = reviewTextArea.value || reviewTextArea.placeholder;
-        const penName = penNameInput.value.trim();
+        // penNameInput ไม่ได้อยู่ในโค้ด Blade ที่ให้มา แต่ถ้ามีจะใช้ได้
+        const penName = penNameInput ? penNameInput.value.trim() : ''; 
+        // อัปเดตผู้เขียนในตัวอย่างรีวิว (ใช้ defaultUsername/pen_name)
         previewAuthor.innerHTML = `นามปากกา: ${penName || defaultUsername}<span>นักเขียนนิยายอิสระ</span>`;
-        const rating = ratingValueInput.value;
+        
+        const rating = parseInt(ratingValueInput.value) || 0; // ต้องแน่ใจว่าเป็นตัวเลข
+        
+        // อัปเดตดาวในส่วนแสดงตัวอย่าง (preview)
         previewStars.forEach((star, index) => {
-            star.classList.toggle('filled', index < rating);
+            // ต้องมั่นใจว่า CSS ของคุณกำหนดสไตล์สำหรับ .filled ไว้
+            star.classList.toggle('filled', index < rating); 
         });
+        
+        // อัปเดตคะแนนตัวเลขในส่วนแสดงตัวอย่าง
         previewRatingText.textContent = `${rating}/5`;
     }
 
     if (ratingStarsContainer) {
         function setRating(value) {
             ratingValueInput.value = value;
+            // อัปเดตดาวในส่วนฟอร์ม
             stars.forEach(star => {
                 star.classList.toggle('selected', star.dataset.value <= value);
             });
@@ -1257,30 +1255,37 @@
 
         ratingStarsContainer.addEventListener('mouseover', (e) => {
             if(e.target.closest('.star')) {
-                 ratingStarsContainer.classList.add('rating-hover');
-                 const hoverValue = e.target.closest('.star').dataset.value;
-                 stars.forEach(s => s.classList.toggle('selected', s.dataset.value <= hoverValue));
+                ratingStarsContainer.classList.add('rating-hover');
+                const hoverValue = e.target.closest('.star').dataset.value;
+                stars.forEach(s => s.classList.toggle('selected', s.dataset.value <= hoverValue));
             }
         });
 
-         ratingStarsContainer.addEventListener('mouseout', () => {
-             ratingStarsContainer.classList.remove('rating-hover');
-             setRating(ratingValueInput.value);
-         });
+        ratingStarsContainer.addEventListener('mouseout', () => {
+            ratingStarsContainer.classList.remove('rating-hover');
+            setRating(ratingValueInput.value);
+        });
 
         ratingStarsContainer.addEventListener('click', (e) => {
-             if(e.target.closest('.star')) {
-                 setRating(e.target.closest('.star').dataset.value);
+            if(e.target.closest('.star')) {
+                setRating(e.target.closest('.star').dataset.value);
             }
         });
+
+        // **จุดสำคัญ: เรียก setRating เมื่อโหลดหน้าเพื่อแสดงผลดาวเริ่มต้นจาก $userReview**
+        const initialRating = parseInt(ratingValueInput.value);
+        if (initialRating > 0) {
+            setRating(initialRating);
+        }
     }
 
     if (reviewTextArea) reviewTextArea.addEventListener('input', updatePreview);
-    if (penNameInput) penNameInput.addEventListener('input', updatePreview);
+    // if (penNameInput) penNameInput.addEventListener('input', updatePreview); // ถูกปิดไว้เพราะ penNameInput ไม่ได้อยู่ใน Blade
 
     if (reviewForm) {
         reviewForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            // โค้ดนี้ถูกแก้ไขเพื่อให้จำลองการส่งรีวิวสำเร็จ
             notification.textContent = 'ส่งรีวิวของคุณเรียบร้อยแล้ว!';
             notification.style.backgroundColor = 'var(--status-completed)';
             notification.classList.add('show');
@@ -1291,7 +1296,7 @@
         });
     }
 
-    // --- Affiliate Page Logic ---
+    // --- Affiliate Page Logic (เหมือนเดิม) ---
     const copyBtn = document.getElementById('copy-affiliate-link-btn');
     const affiliateLinkInput = document.getElementById('affiliate-link');
 
@@ -1306,9 +1311,47 @@
         });
     }
 
-    // populateEbookLibrary();
-    updatePreview();
+    // *** NEW: Avatar Preview Logic ***
+    const avatarFileInput = document.getElementById('avatar_file');
+    const avatarPreviewImg = document.getElementById('avatar-preview-img');
+
+    if (avatarFileInput && avatarPreviewImg) {
+        avatarFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // ตรวจสอบว่าเป็นไฟล์รูปภาพหรือไม่
+                if (!file.type.startsWith('image/')) {
+                    // (Optional) Show error modal
+                    // showModal('error-modal', 'ไฟล์ไม่ถูกต้อง', 'กรุณาเลือกไฟล์รูปภาพ .jpg หรือ .png เท่านั้น');
+                    alert('กรุณาเลือกไฟล์รูปภาพ .jpg หรือ .png เท่านั้น');
+                    // Clear the input
+                    avatarFileInput.value = "";
+                    return;
+                }
+                
+                // สร้าง URL ชั่วคราวสำหรับไฟล์ที่เลือก
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    // ตั้งค่า src ของ img tag ให้เป็น URL ชั่วคราวเพื่อแสดงผล
+                    avatarPreviewImg.src = e.target.result;
+                };
+                
+                // อ่านไฟล์เป็น Data URL
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    // *** END NEW Logic ***
+
+
+    // **5. เรียก updatePreview() ครั้งสุดท้าย**
+    // (ถ้า initialRating > 0 มันจะถูกเรียกใน setRating() ไปแล้ว แต่ถ้าเป็น 0 ต้องเรียกเพื่อให้ content/text preview อัปเดต)
+    if (!ratingStarsContainer || parseInt(ratingValueInput.value) === 0) {
+        updatePreview();
+    }
 });
 </script>
 </body>
 </html>
+
