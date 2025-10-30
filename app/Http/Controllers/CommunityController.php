@@ -231,8 +231,10 @@ class CommunityController extends Controller
         // 5. Prepare data in the same format JS expects
         $author = $post->author;
         $displayName = $author->pen_name ?: $author->name;
-        $initial = mb_substr($displayName, 0, 1) ?: 'U';
-        $avatar = 'https://placehold.co/100x100/A9B4D9/121828?text=' . urlencode(strtoupper($initial));
+
+        $avatar = $this->getCommunityUserAvatar($author);
+
+        // $commentAuthorAvatar = $this->getCommunityUserAvatar($commentAuthor); 
 
         $jsPost = [
             'id' => $post->id,

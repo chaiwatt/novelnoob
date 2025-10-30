@@ -17,8 +17,10 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->double('target_price',10,5)->nullable();
             $table->double('close_price',10,5)->nullable();
+            $table->double('pending_price',10,5)->nullable();
             $table->char('pips_away')->default(0);
-            $table->char('reversal')->default(0);      
+            $table->char('is_alert')->default(0);      
+            $table->char('reversal')->default(0); 
             $table->dateTime('last_alert_sent_at')->nullable();
             
             $table->timestamps();
