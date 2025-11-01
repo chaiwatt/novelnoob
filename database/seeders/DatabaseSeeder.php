@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             TwelvedataApiSeeder::class,
             CreditPackageSeeder::class,
             CommunitySeeder::class,
+            ArticleSeeder::class
 
         ]);
 

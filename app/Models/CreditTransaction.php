@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\CreditPackage;
+use App\Models\OnChargeTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,7 @@ class CreditTransaction extends Model
      */
     protected $fillable = [
         'user_id',
+        'on_charge_transaction_id',
         'credit_package_id',
         'credits_added',
         'amount_paid',
@@ -51,5 +53,15 @@ class CreditTransaction extends Model
     public function creditPackage(): BelongsTo
     {
         return $this->belongsTo(CreditPackage::class);
+    }
+
+        /**
+     * ⭐️ [เพิ่มใหม่]
+     * Get the charge transaction that this credit transaction belongs to.
+     */
+    public function onChargeTransaction(): BelongsTo
+    {
+        // ⭐️ เชื่อมโยงกลับไปยัง OnChargeTransaction
+        return $this->belongsTo(OnChargeTransaction::class, 'on_charge_transaction_id');
     }
 }

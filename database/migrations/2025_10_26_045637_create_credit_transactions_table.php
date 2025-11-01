@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('credit_transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('on_charge_transaction_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('credit_package_id')->nullable()->constrained()->onDelete('set null'); // Allow package deletion without losing history
             $table->unsignedBigInteger('credits_added');

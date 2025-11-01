@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminDashboardController;
@@ -31,9 +32,12 @@ Route::get('/community/single-post/{post}', [CommunityController::class, 'show']
 Route::get('/community/single-post/{id}', [CommunityController::class, 'singlePost'])->name('community.single-post');
 Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
-Route::get('/article/{id}', [ArticleController::class, 'show'])->name('articles.show');
+Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('articles.show');
+Route::get('/tags/{tag_slug}', [ArticleController::class, 'showByTag'])->name('articles.byTag');
+
 Route::get('/post/{id}', [ArticleController::class, 'show'])->name('posts.show');
 Route::get('/novel/create', [NovelController::class, 'create'])->name('novel.create');
+
 
 
 // Route สำหรับ Admin เท่านั้น
@@ -58,8 +62,9 @@ Route::middleware(['auth', 'writer'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/novel/{novel}/edit', [NovelController::class, 'edit'])->name('novel.edit');
     Route::get('/novel/{novel}/download', [NovelGenerationController::class, 'downloadTxt'])->name('novel.download');
-    Route::post('/purchase-credits', [DashboardController::class, 'purchaseCredits'])->name('credits.purchase');
-    Route::get('/credits/checkout/{package}', [DashboardController::class, 'showCheckout'])->name('credits.checkout');
+    Route::post('/purchase-credits', [PaymentController::class, 'purchaseCredits'])->name('credits.purchase');
+    Route::get('/credits/checkout/{package}', [PaymentController::class, 'showCheckout'])->name('credits.checkout');
+    Route::get('/check-status/{charge_id}', [PaymentController::class, 'checkStatus'])->name('payment.check_status');
     Route::post('/dashboard/settings/profile', [DashboardController::class, 'updateProfile'])->name('dashboard.settings.update.profile');
     Route::post('/dashboard/settings/password', [DashboardController::class, 'updatePassword'])->name('dashboard.settings.update.password');
     Route::post('/dashboard/review/submit', [DashboardController::class, 'submitReview'])->name('dashboard.review.submit');
@@ -88,6 +93,9 @@ Route::middleware(['auth', 'writer'])->group(function () {
     Route::post('/community/posts/{post}/useful', [CommunityController::class, 'toggleUseful'])->name('community.posts.useful');
 
     Route::post('/community/posts/{post}/report', [CommunityController::class, 'storeReport'])->name('community.posts.report');
+
+
+
     
 });
 

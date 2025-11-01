@@ -15,12 +15,10 @@
     <style>
         /* --- Page-Specific Styles for Articles Page --- */
         
-        /* Adjust container for this page */
+        /* ... (โค้ด CSS เดิมของคุณตั้งแต่ .container จนถึง .btn-read-more:hover อยู่ตรงนี้) ... */
         .container {
             max-width: 900px;
         }
-
-        /* Override button styles for this page if needed */
         .nav-actions .btn-secondary {
             border-color: var(--text-secondary);
         }
@@ -29,12 +27,9 @@
             border-color: var(--border-color);
             color: var(--text-primary);
         }
-
         main {
-            padding-top: 88px; /* Offset for fixed header */
+            padding-top: 88px;
         }
-        
-        /* Page Header */
         .page-header {
             padding: 60px 0;
             text-align: center;
@@ -50,46 +45,39 @@
             max-width: 600px;
             margin: 0 auto;
         }
-
-        /* ⭐️ --- (เพิ่ม) Search Bar Styles --- ⭐️ */
         .search-container {
-            margin-top: 30px; /* Space from the <p> tag */
+            margin-top: 30px;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
-
         .search-container form {
             display: flex;
             position: relative;
         }
-
         .search-container input[type="text"] {
-            flex-grow: 1; /* Take up most of the space */
+            flex-grow: 1;
             width: 100%;
             border: 1px solid var(--border-color);
-            background-color: var(--bg-light); /* Darker background */
+            background-color: var(--bg-light);
             color: var(--text-primary);
             padding: 15px 20px;
             border-radius: 12px;
             font-size: 1rem;
             font-family: var(--font-ui);
-            padding-right: 120px; /* Make space for the button */
+            padding-right: 120px;
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-
         .search-container input[type="text"]:focus {
             border-color: var(--primary-accent);
             box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.3);
         }
-
         .search-container button[type="submit"] {
             position: absolute;
-            right: 6px; /* Small gap from the edge */
+            right: 6px;
             top: 50%;
             transform: translateY(-50%);
-            
             display: flex;
             align-items: center;
             gap: 8px;
@@ -104,36 +92,28 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         .search-container button[type="submit"]:hover {
             background-color: var(--primary-hover);
         }
-
         .search-container button[type="submit"] svg {
             width: 18px;
             height: 18px;
             stroke-width: 2.5;
         }
-        
-        /* Responsive adjustment for search button */
         @media (max-width: 480px) {
             .search-container input[type="text"] {
-                padding-right: 55px; /* Space for icon-only button */
+                padding-right: 55px;
             }
             .search-container button[type="submit"] {
                 padding: 10px;
             }
             .search-container button[type="submit"] span {
-                display: none; /* Hide text on small screens */
+                display: none;
             }
             .search-container button[type="submit"] svg {
-                margin-right: 0; /* Remove gap */
+                margin-right: 0;
             }
         }
-        /* ⭐️ --- (จบ) Search Bar Styles --- ⭐️ */
-
-        
-        /* Article Grid */
         .articles-section {
             padding: 60px 0;
         }
@@ -206,6 +186,114 @@
         .btn-read-more:hover {
             background-color: var(--primary-hover);
         }
+
+        /* ⭐️ --- (ปรับปรุง) Pagination Styles (อ้างอิงจากรูปภาพ) --- ⭐️ */
+        .pagination-container {
+            margin-top: 60px; /* เพิ่มระยะห่างด้านบน */
+            display: flex;
+            flex-direction: column; /* จัดเรียงแนวตั้ง */
+            align-items: center; /* จัดกลาง */
+            gap: 20px; /* ระยะห่างระหว่างส่วน */
+            width: 100%;
+        }
+
+        /* "« Previous Next »" text links */
+        .pagination-text-links {
+            display: flex;
+            gap: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: var(--font-ui);
+            order: 1; /* สั่งให้อยู่บนสุด */
+        }
+        .pagination-text-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .pagination-text-links a:hover {
+            color: var(--primary-accent);
+        }
+        .pagination-text-links a.disabled {
+            color: var(--border-color);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* ⭐️ (ลบ) "Showing..." text */
+        /* .pagination-summary { ... } */
+        
+        /* Main controls (Arrows + Numbers) */
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            max-width: 300px; /* จำกัดความกว้าง */
+            order: 3; /* สั่งให้อยู่ล่างสุด */
+            margin-top: 10px;
+        }
+
+        /* Big Arrows */
+        .pagination-arrow {
+            color: white; /* สีลูกศร */
+            text-decoration: none;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .pagination-arrow svg {
+            width: 40px;
+            height: 40px;
+            stroke-width: 2.5;
+        }
+        .pagination-arrow:hover {
+            color: var(--primary-accent);
+            transform: scale(1.1);
+        }
+        .pagination-arrow.disabled {
+            color: var(--border-color); /* สีจาง */
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        /* Page numbers container */
+        .pagination-pages {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1; /* ให้มันขยายเต็มพื้นที่ตรงกลาง */
+            gap: 10px; /* (ปรับ) ลด gap ให้พอดีกับ ... */
+        }
+        .pagination-pages .page-link {
+            font-family: var(--font-heading);
+            font-size: 1.4rem; /* ขนาดใหญ่ */
+            font-weight: bold;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+        .pagination-pages .page-link:hover {
+            color: white;
+        }
+        .pagination-pages .page-link.active {
+            color: var(--primary-accent); /* สี active */
+            font-size: 1.7rem; /* ใหญ่กว่าเดิมนิดนึง */
+        }
+        
+        /* ⭐️ (เพิ่ม) สไตล์สำหรับ "..." */
+        .pagination-dots {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--text-secondary);
+            padding: 5px;
+            cursor: default;
+        }
+        
+        /* ⭐️ --- (จบ) Pagination Styles --- ⭐️ */
+
     </style>
 </head>
 <body>
@@ -265,10 +353,11 @@
     <main>
         <section class="page-header">
             <div class="container">
-                <h1>บทความและเทคนิคการเขียน</h1>
-                <p>คลังความรู้สำหรับนักเขียนยุคใหม่ ค้นพบเคล็ดลับ เทคนิค และแรงบันดาลใจในการสร้างสรรค์นิยายของคุณ</p>
+                {{-- ⭐️ (แก้) เปลี่ยนเป็น H1 และ P แบบไดนามิก --}}
+                <h1>{{ $pageTitle ?? 'บทความและเทคนิคการเขียน' }}</h1>
+                <p>{{ $pageSubtitle ?? 'คลังความรู้สำหรับนักเขียนยุคใหม่ ค้นพบเคล็ดลับ เทคนิค และแรงบันดาลใจในการสร้างสรรค์นิยายของคุณ' }}</p>
                 
-                <!-- ⭐️ --- (เพิ่ม) Search Bar HTML --- ⭐️ -->
+                <!-- ⭐️ --- (โค้ดเดิม) Search Bar HTML --- ⭐️ -->
                 <div class="search-container">
                     <form action="{{ route('articles.index') }}" method="GET">
                         <input type="text" name="search" placeholder="ค้นหาบทความ..." value="{{ request('search') }}">
@@ -285,56 +374,135 @@
 
         <section class="articles-section">
             <div class="container">
+                
+                {{-- ⭐️ --- (แก้) เริ่มต้น Loop แสดงบทความ --- ⭐️ --}}
                 <div class="articles-list">
                     
-                    <div class="article-card">
-                        <div class="article-card-header">
-                            <h2 class="article-card-title"><a href="{{route('articles.show',['id' => 1])}}">5 วิธีใช้ AI ช่วยคิดพล็อตนิยายที่ไม่ซ้ำใคร</a></h2>
-                            <div class="article-card-meta">โดย  Novel Noob | 15 สิงหาคม 2568</div>
-                        </div>
-                        <div class="article-card-tags">
-                            <a href="#" class="tag">เทคนิคการเขียน</a>
-                            <a href="#" class="tag">AI Assistant</a>
-                            <a href="#" class="tag">การวางพล็อต</a>
-                        </div>
-                        <p class="article-card-excerpt">หมดปัญหานั่งจ้องหน้ากระดาษเปล่า! เรียนรู้วิธีใช้ AI เป็นผู้ช่วยระดมสมอง สร้างพล็อตที่ซับซ้อนและน่าติดตามสำหรับนิยายเล่มใหม่ของคุณ...</p>
-                        <div class="article-card-footer">
-                            <a href="{{route('articles.show',['id' => 1])}}" class="btn-read-more">อ่านต่อ &rarr;</a>
-                        </div>
-                    </div>
+                    @forelse ($articles as $article)
+                        <div class="article-card">
+                            <div class="article-card-header">
+                                {{-- ⭐️ (แก้) ใช้ route 'articles.show' และ $article->slug --}}
+                                <h2 class="article-card-title"><a href="{{ route('articles.show', ['slug' => $article->slug]) }}">{{ $article->title }}</a></h2>
+                                {{-- ⭐️ (แก้) ใช้ $article->thaiDate จาก Model Accessor --}}
+                                <div class="article-card-meta">โดย Novel Noob | {{ $article->thaiDate }}</div>
+                            </div>
 
-                    <div class="article-card">
-                        <div class="article-card-header">
-                            <h2 class="article-card-title"><a href="{{route('articles.show',['id' => 1])}}">จากต้นฉบับสู่ Ebook: คู่มือสำหรับนักเขียนมือใหม่</a></h2>
-                            <div class="article-card-meta">โดย  Novel Noob | 10 สิงหาคม 2568</div>
+                            {{-- ⭐️ (แก้) ตรวจสอบและ Loop Tags --}}
+                            @if (!empty($article->tags) && is_array($article->tags))
+                                <div class="article-card-tags">
+                                    @foreach ($article->tags as $tag)
+                                        {{-- ⭐️ (แก้) ใช้ route 'articles.byTag' --}}
+                                        <a href="{{ route('articles.byTag', ['tag_slug' => $tag['tag_slug']]) }}" class="tag">{{ $tag['tag'] }}</a>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- ⭐️ (แก้) ใช้ $article->meta_description สำหรับ excerpt --}}
+                            <p class="article-card-excerpt">{{ $article->meta_description }}</p>
+                            
+                            <div class="article-card-footer">
+                                {{-- ⭐️ (แก้) ใช้ route 'articles.show' และ $article->slug --}}
+                                <a href="{{ route('articles.show', ['slug' => $article->slug]) }}" class="btn-read-more">อ่านต่อ &rarr;</a>
+                            </div>
                         </div>
-                        <div class="article-card-tags">
-                            <a href="#" class="tag">Ebook</a>
-                            <a href="#" class="tag">How-to</a>
-                            <a href="#" class="tag">การตลาด</a>
+                    @empty
+                        {{-- ⭐️ (เพิ่ม) กรณีไม่พบบทความ --}}
+                        <div class="article-card" style="text-align: center;">
+                            <p style="font-size: 1.1rem; color: var(--text-secondary); margin: 20px 0;">
+                                ไม่พบบทความที่ตรงกับการค้นหาของคุณ
+                            </p>
                         </div>
-                        <p class="article-card-excerpt">เขียนนิยายจบแล้วทำอย่างไรต่อ? บทความนี้จะแนะนำขั้นตอนการเปลี่ยนต้นฉบับของคุณให้กลายเป็น Ebook พร้อมขายบนแพลตฟอร์มชั้นนำ...</p>
-                        <div class="article-card-footer">
-                             <a href="{{route('articles.show',['id' => 1])}}" class="btn-read-more">อ่านต่อ &rarr;</a>
-                        </div>
-                    </div>
-                    
-                    <div class="article-card">
-                        <div class="article-card-header">
-                             <h2 class="article-card-title"><a href="{{route('articles.show',['id' => 1])}}">เทคนิคสร้างตัวละครให้น่าจดจำด้วย AI Assistant</a></h2>
-                            <div class="article-card-meta">โดย  Novel Noob | 5 สิงหาคม 2568</div>
-                        </div>
-                        <div class="article-card-tags">
-                            <a href="#" class="tag">การสร้างตัวละคร</a>
-                            <a href="#" class="tag">เทคนิคการเขียน</a>
-                        </div>
-                        <p class="article-card-excerpt">ตัวละครคือหัวใจของเรื่องราว ค้นพบวิธีการใช้ AI ช่วยสร้างมิติให้ตัวละครของคุณ ทั้งปูมหลัง, จุดแข็ง, จุดอ่อน, และเป้าหมายในชีวิต...</p>
-                        <div class="article-card-footer">
-                             <a href="{{route('articles.show',['id' => 1])}}" class="btn-read-more">อ่านต่อ &rarr;</a>
-                        </div>
-                    </div>
+                    @endforelse
 
                 </div>
+                {{-- ⭐️ --- (จบ) Loop แสดงบทความ --- ⭐️ --}}
+
+
+                {{-- ⭐️ --- (ปรับปรุง) ส่วนแสดงผล Pagination --- ⭐️ --}}
+                @if ($articles->hasPages())
+                    <div class="pagination-container">
+
+                        <!-- 1. "« Previous Next »" text links (จากรูป) -->
+                        <div class="pagination-text-links">
+                            <a href="{{ $articles->previousPageUrl() }}" 
+                               class="{{ $articles->onFirstPage() ? 'disabled' : '' }}">
+                               « ก่อนหน้า
+                            </a>
+                            <a href="{{ $articles->nextPageUrl() }}" 
+                               class="{{ !$articles->hasMorePages() ? 'disabled' : '' }}">
+                               ต่อไป »
+                            </a>
+                        </div>
+
+                        <!-- ⭐️ (ลบ) "Showing..." text -->
+                        {{-- 
+                        <div class="pagination-summary">
+                            Showing {{ $articles->firstItem() }} to {{ $articles->lastItem() }} of {{ $articles->total() }} results
+                        </div>
+                        --}}
+
+                        <!-- 3. Main controls: Arrows + Numbers (จากรูป) -->
+                        <div class="pagination-controls">
+                            
+                            <!-- Previous Arrow -->
+                            <a href="{{ $articles->previousPageUrl() }}" 
+                               class="pagination-arrow {{ $articles->onFirstPage() ? 'disabled' : '' }}"
+                               aria-label="Previous Page">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </a>
+
+                            <!-- Page Numbers -->
+                            <div class="pagination-pages">
+                                {{-- ⭐️ --- (ปรับปรุง) ตรรกะการแสดงผลเลขหน้า --- ⭐️ --}}
+                                @php
+                                    $currentPage = $articles->currentPage();
+                                    $lastPage = $articles->lastPage();
+                                    $linksToShow = 6; // 6 ลิงก์ (1 2 3 4 5 6)
+                                    $sideLinks = 3; // 3 ลิงก์แรก (1 2 3) และ 3 ลิงก์สุดท้าย (X-2 X-1 X)
+                                @endphp
+
+                                @if ($lastPage <= $linksToShow)
+                                    {{-- Case 1: 6 หรือน้อยกว่า 6 หน้า. แสดงทั้งหมด --}}
+                                    @for ($page = 1; $page <= $lastPage; $page++)
+                                        <a href="{{ $articles->url($page) }}" class="page-link {{ ($page == $currentPage) ? 'active' : '' }}">
+                                           {{ $page }}
+                                        </a>
+                                    @endfor
+                                @else
+                                    {{-- Case 2: 7 หน้าขึ้นไป. แสดงแบบย่อ (1 2 3 ... 5 6 7) --}}
+                                    
+                                    {{-- แสดง 3 หน้าแรก --}}
+                                    @for ($page = 1; $page <= $sideLinks; $page++)
+                                        <a href="{{ $articles->url($page) }}" class="page-link {{ ($page == $currentPage) ? 'active' : '' }}">
+                                           {{ $page }}
+                                        </a>
+                                    @endfor
+
+                                    <span class="pagination-dots">...</span>
+
+                                    {{-- แสดง 3 หน้าสุดท้าย --}}
+                                    @for ($page = $lastPage - ($sideLinks - 1); $page <= $lastPage; $page++)
+                                        <a href="{{ $articles->url($page) }}" class="page-link {{ ($page == $currentPage) ? 'active' : '' }}">
+                                           {{ $page }}
+                                        </a>
+                                    @endfor
+                                @endif
+                                {{-- ⭐️ --- (จบ) ตรรกะการแสดงผลเลขหน้า --- ⭐️ --}}
+                            </div>
+                            
+                            <!-- Next Arrow -->
+                            <a href="{{ $articles->nextPageUrl() }}" 
+                               class="pagination-arrow {{ !$articles->hasMorePages() ? 'disabled' : '' }}"
+                               aria-label="Next Page">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
+
+                    </div>
+                @endif
+                {{-- ⭐️ --- (จบ) ส่วนแสดงผล Pagination --- ⭐️ --}}
+
+
             </div>
         </section>
     </main>
@@ -351,3 +519,5 @@
 
 </body>
 </html>
+
+

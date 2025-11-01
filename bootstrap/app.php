@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use App\Providers\OmiseServiceProvider;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\WriterMiddleware;
 use App\Http\Middleware\StoreAffiliateRef;
@@ -24,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             StoreAffiliateRef::class,
         ]);
     })
+    ->withProviders([ // <-- 2. เพิ่มส่วนนี้เข้าไป
+        OmiseServiceProvider::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

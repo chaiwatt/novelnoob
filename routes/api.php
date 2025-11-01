@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MyFxbookController;
 use App\Http\Controllers\ForexPriceAlertController;
 use App\Http\Controllers\NovelGenerationController;
@@ -27,3 +28,5 @@ Route::get('/user', function (Request $request) {
 Route::post('/myfxbook-sentiment', [MyFxbookController::class, 'getSentiment']);//->middleware('check.myfxbook.api.token');
 Route::post('/get-breakout-count', [MyFxbookController::class, 'getBreakoutCount']);//->middleware('check.myfxbook.api.token');
 Route::post('/myfxbook-batch-sentiment', [MyFxbookController::class, 'getBatchSentiment']);
+
+Route::post('/omise-webhook', [PaymentController::class, 'webhook']);
