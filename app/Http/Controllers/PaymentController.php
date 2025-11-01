@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\CreditPackage;
@@ -171,36 +172,58 @@ class PaymentController extends Controller
         }
     }
 
-
-    /**
-     * ⭐️ [แก้ไข Webhook ใหม่ทั้งหมด]
-     * รับ Webhook จาก Omise เพื่อยืนยันการชำระเงิน
+   /**
+     * ⭐️ [ใหม่] Webhook Endpoint เพื่อรับการแจ้งเตือนจาก Omise (Route: POST /payment/omise/webhook)
      */
     public function webhook(Request $request)
     {
+        // ตรวจสอบ Content Type และ Omise Key (ถ้ามี)
+        
         $payload = json_decode($request->getContent(), true);
+        $chargeData = $payload['data'] ?? [];
+        $chargeId = $chargeData['id'] ?? null;
+        
+        if (empty($chargeId)) {
+             Log::warning("Webhook Error: Empty Charge ID or Payload", $payload);
+             return response('Error: Empty Charge ID', 400);
+        }
+
         Log::info('Omise Webhook Received:', $payload);
 
         // ตรวจสอบว่าเป็น Event "charge.complete"
         if ($payload && isset($payload['key']) && $payload['key'] === 'charge.complete') {
             
-            $chargeData = $payload['data'];
-            $chargeId = $chargeData['id'];
+            // --- ⭐️ [แก้ไข] ดึงข้อมูลที่จำเป็นและจัดการค่า null/default ---
+            $rawPaidAt = $chargeData['paid_at'] ?? null;
+            $paidAt = null; // ⭐️ ตั้งค่าเริ่มต้นเป็น null
+            
+            // ⭐️ [THE FIX] ⭐️
+            // แปลงค่า timestamp (ISO 8601 string) ด้วย Carbon ก่อน
+            // เพื่อให้แน่ใจว่าเป็น DateTime Object ที่ถูกต้องก่อนบันทึก
+            if ($rawPaidAt) {
+                try {
+                    $paidAt = Carbon::parse($rawPaidAt);
+                } catch (Exception $e) {
+                    Log::error("Webhook Error: Could not parse paid_at timestamp: $rawPaidAt", ['charge_id' => $chargeId]);
+                    // หากแปลงค่าล้มเหลว $paidAt จะยังคงเป็น null (ซึ่งฐานข้อมูลยอมรับ)
+                }
+            }
+
+            $sourceId = $chargeData['source']['id'] ?? null;
 
             if (isset($chargeData['status']) && trim($chargeData['status']) == 'successful') {
                 
-                // --- 1. อัปเดต OnChargeTransaction (ตามที่คุณสั่ง) ---
+                // --- 1. อัปเดต OnChargeTransaction ---
                 $onCharge = OnChargeTransaction::updateOrCreate(
                     ['charge_id' => $chargeId], 
                     [ 
-                        'source_id' => $chargeData['source']['id'] ?? null,
-                        'status' => 'successful', // ⭐️ บังคับเป็น successful
-                        // 'paid_at' => $chargeData['paid_at'],
+                        'source_id' => $sourceId, 
+                        'status' => 'successful', 
+                        'paid_at' => $paidAt, // ⭐️ [THE FIX] ใช้ค่าที่แปลงแล้ว
                     ]
                 );
 
-                // --- 2. [แก้ไข] ตรวจสอบการทำงานซ้ำ (THE FIX) ---
-                // ตรวจสอบว่า OnChargeTransaction นี้ มี CreditTransaction ลูกแล้วหรือยัง
+                // --- 2. ตรวจสอบการทำงานซ้ำ (ป้องกัน Double Credit) ---
                 $onCharge->load('creditTransaction'); 
                 
                 if ($onCharge->creditTransaction) {
@@ -219,24 +242,23 @@ class PaymentController extends Controller
 
                 if (!$user || !$package) {
                     Log::error("Webhook Error: User ($userId) or Package ($packageId) not found for Charge $chargeId");
-                    return response('Error: Invalid Data', 400); // 400
+                    return response('Error: Invalid Data', 400); 
                 }
 
-                // --- 4. เริ่ม Logic การเติมเครดิต (จากโค้ดเดิมของคุณ) ---
+                // --- 4. เริ่ม Logic การเติมเครดิต (Transaction) ---
                 $transactionDetails = [
                     'gateway' => 'omise_promptpay',
-                    'charge_id' => $chargeId, // (ยังเก็บไว้ใน JSON ได้)
+                    'charge_id' => $chargeId, 
                 ];
 
-                $commissionRate = 0.20; // 20%
+                $commissionRate = 0.20; 
                 $commissionCredits = $package->credits * $commissionRate;
                 
                 DB::beginTransaction();
                 try {
-                    // 1. [แก้ไข] สร้าง CreditTransaction (THE FIX)
-                    // โดยผูกกับ on_charge_transaction_id
+                    // 1. สร้าง CreditTransaction 
                     $transaction = CreditTransaction::create([
-                        'on_charge_transaction_id' => $onCharge->id, // ⭐️ <-- นี่คือจุดที่แก้ไข
+                        'on_charge_transaction_id' => $onCharge->id, 
                         'user_id' => $user->id,
                         'credit_package_id' => $package->id,
                         'credits_added' => $package->credits,
@@ -248,12 +270,12 @@ class PaymentController extends Controller
                     // 2. Update User Credits
                     $user->increment('credits', $package->credits);
 
-                    // 3. Affiliate Logic (จากโค้ดของคุณ)
+                    // 3. Affiliate Logic 
                     if ($affiliateRefCode) {
                         $referrer = User::where('affiliate', $affiliateRefCode)->where('id', '!=', $user->id)->first(); 
                         
                         if ($referrer) {
-                            $maskedEmail = $this->maskEmail($user->email); // (เรียกใช้ฟังก์ชัน)
+                            $maskedEmail = $this->maskEmail($user->email); 
                             $referrer->increment('credits', $commissionCredits);
                             AffiliateTransaction::create([
                                 'referrer_user_id' => $referrer->id, 
@@ -273,12 +295,12 @@ class PaymentController extends Controller
 
             } elseif (isset($chargeData['status']) && trim($chargeData['status']) == 'failed') {
                 
-                // --- 1. อัปเดต OnChargeTransaction (ตามที่คุณสั่ง) ---
-                OnChargeTransaction::updateOrCreate(
+                // --- 1. อัปเดต OnChargeTransaction (failed) ---
+                $onCharge = OnChargeTransaction::updateOrCreate(
                     ['charge_id' => $chargeData['id']],
                     [
+                        'source_id' => $sourceId, 
                         'status' => 'failed',
-                        'source_id' => $chargeData['source']['id'] ?? null,
                     ]
                 );
                 
@@ -287,13 +309,11 @@ class PaymentController extends Controller
                     'failure_message' => $chargeData['failure_message'] ?? 'Unknown'
                 ]);
                 
-                // (ทางเลือก) สร้าง CreditTransaction ที่ failed (ถ้าต้องการ)
-                $onCharge = OnChargeTransaction::where('charge_id', $chargeData['id'])->first();
-                
+                // --- 2. สร้าง CreditTransaction ที่ failed (ถ้ายังไม่มี) ---
                 // ตรวจสอบว่ายังไม่มี credit transaction ลูก
                 if ($onCharge && !$onCharge->creditTransaction) {
-                     CreditTransaction::create([
-                        'on_charge_transaction_id' => $onCharge->id, // ⭐️ <-- แก้ไขให้เชื่อมโยงกัน
+                    CreditTransaction::create([
+                        'on_charge_transaction_id' => $onCharge->id, 
                         'user_id' => $chargeData['metadata']['user_id'] ?? null,
                         'credit_package_id' => $chargeData['metadata']['package_id'] ?? null,
                         'credits_added' => 0,
@@ -312,7 +332,6 @@ class PaymentController extends Controller
         // ตอบ OK 200 กลับไปให้ Omise เสมอ (ถ้าไม่เกิด Error 500)
         return response('OK', 200);
     }
-
     /**
      * ⭐️ [เพิ่มกลับมา]
      * (จำเป็นสำหรับ Logic การอัปเดต Affiliate Transaction ที่คุณให้มา)
