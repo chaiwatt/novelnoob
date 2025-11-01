@@ -193,7 +193,7 @@ class PaymentController extends Controller
                     [ 
                         'source_id' => $chargeData['source']['id'] ?? null,
                         'status' => 'successful',
-                        'paid_at' => $chargeData['paid_at'],
+                        // 'paid_at' => $chargeData['paid_at'],
                     ]
                 );
 
