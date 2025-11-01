@@ -3,26 +3,25 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Support\Str;
+use Illuminate\Support\Str; 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Hash; 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class UserSeeder extends Seeder
 {
-   // ข้อมูลนักเขียน 10 คน ที่คุณเลือก
+    // ⭐️ [แก้ไข] เพิ่ม 'email_name' (ภาษาอังกฤษ) เข้าไปใน Array โดยตรง
     private array $mockAuthors = [
-        ['name' => 'ม่านมุก', 'avatar' => '6C5DD3'],
-        ['name' => 'นักเดินทาง', 'avatar' => '5DD39E'],
-        ['name' => 'เพียงฝัน', 'avatar' => '8375e7'],
-        ['name' => 'เงาจันทร์', 'avatar' => 'D35D5D'],
-        ['name' => 'สายลม', 'avatar' => '3b82f6'],
-        ['name' => 'สมชาย', 'avatar' => 'A9B4D9'],
-        ['name' => 'คิตติกร', 'avatar' => '7AA57B'],
-        ['name' => 'สุรภี', 'avatar' => '9E767F'],
-        ['name' => 'กฤต', 'avatar' => '66444A'],
-        // เพิ่มนักเขียนคนที่ 10
-        ['name' => 'เมฆา', 'avatar' => '40916C'], 
+        ['name' => 'ม่านมุก', 'avatar' => '6C5DD3', 'email_name' => 'manmook'],
+        ['name' => 'นักเดินทาง', 'avatar' => '5DD39E', 'email_name' => 'nakdernthang'],
+        ['name' => 'เพียงฝัน', 'avatar' => '8375e7', 'email_name' => 'piangfan'],
+        ['name' => 'เงาจันทร์', 'avatar' => 'D35D5D', 'email_name' => 'ngaowchan'],
+        ['name' => 'สายลม', 'avatar' => '3b82f6', 'email_name' => 'sailom'],
+        ['name' => 'ลำนำ', 'avatar' => 'A9B4D9', 'email_name' => 'lamnum'],
+        ['name' => 'คิตติกร', 'avatar' => '7AA57B', 'email_name' => 'kittikorn'],
+        ['name' => 'สุรภี', 'avatar' => '9E767F', 'email_name' => 'surapee'],
+        ['name' => 'กฤต', 'avatar' => '66444A', 'email_name' => 'krit'],
+        ['name' => 'เมฆา', 'avatar' => '40916C', 'email_name' => 'mekha'], 
     ];
 
     /**
@@ -45,23 +44,35 @@ class UserSeeder extends Seeder
 
         
         // 4. สร้างนักเขียนเพิ่มเติม 10 คน (ม่านมุก ถึง เมฆา)
-        $i = 0;
         foreach ($this->mockAuthors as $author) {
-            $i++;
-            $initial = mb_substr($author['name'], 0, 1);
+            
+            // ⭐️ [แก้ไข] ลบ Logic 'Str::slug()' ที่จัญไรทิ้งไป
+            $penName = $author['name']; // 'ม่านมุก'
+            $emailSlug = $author['email_name']; // ⭐️ ดึง 'manmook' มาโดยตรง
+
+            // ⭐️ [แก้ไข] สร้าง Email จาก $emailSlug
+            $email = $emailSlug . '@novelnoob.com'; // 'manmook@novelnoob.com'
+            
+            // ⭐️ [แก้ไข] สร้าง Name จาก $emailSlug (ทำให้เป็นตัวพิมพ์ใหญ่สวยงาม)
+            $name = ucwords($emailSlug); // 'Manmook'
+            
+            // ⭐️ [แก้ไข] ดึงอักษรตัวแรก (ภาษาอังกฤษ) จาก $emailSlug
+            $initial = mb_substr(strtoupper($emailSlug), 0, 1); // 'M'
+            
             $color = $author['avatar'];
             
             User::create([
-                'name' => "Author{$i}",
-                'email' => "author{$i}@novelnoob.com",
+                'name' => $name, // ⭐️ 'Manmook'
+                'email' => $email, // ⭐️ 'manmook@novelnoob.com'
                 'credits' => 100,
                 'password' => Hash::make('11111111'),
                 'type' => 'writer',
                 'status' => 1,
                 'affiliate' => Str::uuid(),
-                'pen_name' => $author['name'], // กำหนด Pen Name ตามที่คุณต้องการ
-                'avatar_url' => "https://placehold.co/100x100/{$color}/FFFFFF?text={$initial}"
+                'pen_name' => $penName, // ⭐️ 'ม่านมุก'
+                'avatar_url' => "https://placehold.co/100x100/{$color}/FFFFFF?text={$initial}" // ⭐️ 'M'
             ]);
         }
     }
 }
+
