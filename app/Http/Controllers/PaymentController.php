@@ -171,12 +171,160 @@ class PaymentController extends Controller
         }
     }
 
+        /**
+     * ⭐️ [ใหม่] Webhook Endpoint เพื่อรับการแจ้งเตือนจาก Omise (Route: POST /payment/omise/webhook)
+     */
+    public function webhook(Request $request)
+    {
+        // ตรวจสอบ Content Type และ Omise Key (ถ้ามี)
+        
+        $payload = json_decode($request->getContent(), true);
+        $chargeData = $payload['data'] ?? [];
+        $chargeId = $chargeData['id'] ?? null;
+        
+        if (empty($chargeId)) {
+             Log::warning("Webhook Error: Empty Charge ID or Payload", $payload);
+             return response('Error: Empty Charge ID', 400);
+        }
+
+        Log::info('Omise Webhook Received:', $payload);
+
+        // ตรวจสอบว่าเป็น Event "charge.complete"
+        if ($payload && isset($payload['key']) && $payload['key'] === 'charge.complete') {
+            
+            // --- ดึงข้อมูลที่จำเป็นและจัดการค่า null/default ---
+            $paidAt = $chargeData['paid_at'] ?? null;
+            $sourceId = $chargeData['source']['id'] ?? null;
+
+            if (isset($chargeData['status']) && trim($chargeData['status']) == 'successful') {
+                
+                // --- 1. อัปเดต OnChargeTransaction ---
+                $onCharge = OnChargeTransaction::updateOrCreate(
+                    ['charge_id' => $chargeId], 
+                    [ 
+                        // ⭐️ จัดการ Source ID และ Paid At ที่อาจเป็น null
+                        'source_id' => $sourceId, 
+                        'status' => 'successful', 
+                        'paid_at' => $paidAt,
+                    ]
+                );
+
+                // --- 2. ตรวจสอบการทำงานซ้ำ (ป้องกัน Double Credit) ---
+                $onCharge->load('creditTransaction'); 
+                
+                if ($onCharge->creditTransaction) {
+                    Log::warning("Webhook for processed charge received (Duplicate): $chargeId");
+                    return response('OK - Already Processed', 200);
+                }
+
+                // --- 3. ดึง Metadata และข้อมูล User/Package ---
+                $metadata = $chargeData['metadata'] ?? [];
+                $userId = $metadata['user_id'] ?? null;
+                $packageId = $metadata['package_id'] ?? null;
+                $affiliateRefCode = $metadata['affiliate_ref'] ?? null;
+
+                $user = User::find($userId);
+                $package = CreditPackage::find($packageId);
+
+                if (!$user || !$package) {
+                    Log::error("Webhook Error: User ($userId) or Package ($packageId) not found for Charge $chargeId");
+                    return response('Error: Invalid Data', 400); 
+                }
+
+                // --- 4. เริ่ม Logic การเติมเครดิต (Transaction) ---
+                $transactionDetails = [
+                    'gateway' => 'omise_promptpay',
+                    'charge_id' => $chargeId, 
+                ];
+
+                $commissionRate = 0.20; 
+                $commissionCredits = $package->credits * $commissionRate;
+                
+                DB::beginTransaction();
+                try {
+                    // 1. สร้าง CreditTransaction 
+                    $transaction = CreditTransaction::create([
+                        'on_charge_transaction_id' => $onCharge->id, 
+                        'user_id' => $user->id,
+                        'credit_package_id' => $package->id,
+                        'credits_added' => $package->credits,
+                        'amount_paid' => $package->price,
+                        'status' => 'completed',
+                        'transaction_details' => $transactionDetails,
+                    ]);
+
+                    // 2. Update User Credits
+                    $user->increment('credits', $package->credits);
+
+                    // 3. Affiliate Logic 
+                    if ($affiliateRefCode) {
+                        $referrer = User::where('affiliate', $affiliateRefCode)->where('id', '!=', $user->id)->first(); 
+                        
+                        if ($referrer) {
+                            $maskedEmail = $this->maskEmail($user->email); 
+                            $referrer->increment('credits', $commissionCredits);
+                            AffiliateTransaction::create([
+                                'referrer_user_id' => $referrer->id, 
+                                'credit_package_id' => $package->id,
+                                'referrer_masked_email' => $maskedEmail
+                            ]);
+                        }
+                    }
+
+                    DB::commit();
+
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('Webhook DB Error:', ['message' => $e->getMessage(), 'charge_id' => $chargeId]);
+                    return response('Database Error', 500); // 500 จะทำให้ Omise ส่ง webhook มาใหม่
+                }
+
+            } elseif (isset($chargeData['status']) && trim($chargeData['status']) == 'failed') {
+                
+                // --- 1. อัปเดต OnChargeTransaction (failed) ---
+                $onCharge = OnChargeTransaction::updateOrCreate(
+                    ['charge_id' => $chargeData['id']],
+                    [
+                        'source_id' => $sourceId, 
+                        'status' => 'failed',
+                    ]
+                );
+                
+                Log::warning('Omise Charge Failed:', [
+                    'charge_id' => $chargeData['id'], 
+                    'failure_message' => $chargeData['failure_message'] ?? 'Unknown'
+                ]);
+                
+                // --- 2. สร้าง CreditTransaction ที่ failed (ถ้ายังไม่มี) ---
+                // ตรวจสอบว่ายังไม่มี credit transaction ลูก
+                if ($onCharge && !$onCharge->creditTransaction) {
+                    CreditTransaction::create([
+                        'on_charge_transaction_id' => $onCharge->id, 
+                        'user_id' => $chargeData['metadata']['user_id'] ?? null,
+                        'credit_package_id' => $chargeData['metadata']['package_id'] ?? null,
+                        'credits_added' => 0,
+                        'amount_paid' => ($chargeData['amount'] ?? 0) / 100,
+                        'status' => 'failed',
+                        'transaction_details' => [
+                            'gateway' => 'omise_promptpay',
+                            'charge_id' => $chargeData['id'],
+                            'failure_message' => $chargeData['failure_message'] ?? 'Unknown'
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        // ตอบ OK 200 กลับไปให้ Omise เสมอ (ถ้าไม่เกิด Error 500)
+        return response('OK', 200);
+    }
+
 
     /**
      * ⭐️ [แก้ไข Webhook ใหม่ทั้งหมด]
      * รับ Webhook จาก Omise เพื่อยืนยันการชำระเงิน
      */
-    public function webhook(Request $request)
+    public function webhook_(Request $request)
     {
         $payload = json_decode($request->getContent(), true);
         Log::info('Omise Webhook Received:', $payload);
